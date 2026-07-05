@@ -1,16 +1,26 @@
-import { NavLink, Outlet, useParams } from 'react-router-dom';
+import { Outlet, useParams, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { api, type Group } from '../lib/api';
 import { useAuth } from '../hooks/useAuth';
+import { SidebarShell } from './SidebarShell';
+import { SidebarLink, SidebarButton } from './SidebarLink';
+import {
+  IconOverview,
+  IconTasks,
+  IconProof,
+  IconVouch,
+  IconStandings,
+  IconSettings,
+  IconSignOut,
+} from './SidebarIcons';
 
-const tabs = [
-  { to: '', label: 'Overview', end: true },
-  { to: 'tasks', label: 'Tasks' },
-  { to: 'submit', label: 'Send proof' },
-  { to: 'approve', label: 'Vouch' },
-  { to: 'leaderboard', label: 'Standings' },
-  { to: 'settings', label: 'Settings' },
+const navItems = [
+  { to: '', label: 'Overview', icon: <IconOverview />, end: true },
+  { to: 'tasks', label: 'Tasks', icon: <IconTasks /> },
+  { to: 'submit', label: 'Send proof', icon: <IconProof /> },
+  { to: 'approve', label: 'Vouch', icon: <IconVouch /> },
+  { to: 'leaderboard', label: 'Standings', icon: <IconStandings /> },
+  { to: 'settings', label: 'Settings', icon: <IconSettings />, ownerOnly: true },
 ];
 
 export function GroupLayout() {
@@ -22,42 +32,50 @@ export function GroupLayout() {
     if (id) api<Group>(`/groups/${id}`).then(setGroup).catch(console.error);
   }, [id]);
 
+  const links = navItems.filter(
+    (item) => !item.ownerOnly || group?.my_role === 'owner'
+  );
+
   return (
-    <div className="min-h-screen bg-surface">
-      <header className="panel">
-        <div className="mx-auto flex max-w-5xl items-end justify-between px-6 py-5 md:px-10">
-          <div>
-            <Link to="/dashboard" className="text-xs text-ink-muted hover:text-accent">
-              ← All crews
-            </Link>
-            <h1 className="mt-1 font-display text-2xl font-bold text-ink md:text-3xl">
-              {group?.name ?? '…'}
-            </h1>
-          </div>
-          <button onClick={signOut} className="hidden text-sm text-ink-muted hover:text-ink md:block">
-            Sign out
-          </button>
-        </div>
-      </header>
-
-      <nav className="border-b border-rule bg-raised">
-        <div className="mx-auto flex max-w-5xl overflow-x-auto px-6 md:px-10">
-          {tabs.map((tab) => (
-            <NavLink
-              key={tab.to}
-              to={tab.to ? `/groups/${id}/${tab.to}` : `/groups/${id}`}
-              end={tab.end}
-              className={({ isActive }) => `nav-tab ${isActive ? 'nav-tab-active' : ''}`}
+    <SidebarShell
+      title={group?.name ?? 'Crew'}
+      brand={
+        <Link to="/dashboard" className="sidebar-brand sidebar-brand-full">
+          Vouch
+        </Link>
+      }
+      header={
+        <>
+          <Link to="/dashboard" className="text-xs text-ink-muted hover:text-accent">
+            ← All crews
+          </Link>
+          <p className="mt-3 font-display text-lg font-semibold leading-tight text-ink">
+            {group?.name ?? '…'}
+          </p>
+          <p className="label-caps mt-4">Navigation</p>
+        </>
+      }
+      nav={
+        <>
+          {links.map((item) => (
+            <SidebarLink
+              key={item.to}
+              to={item.to ? `/groups/${id}/${item.to}` : `/groups/${id}`}
+              end={item.end}
+              icon={item.icon}
             >
-              {tab.label}
-            </NavLink>
+              {item.label}
+            </SidebarLink>
           ))}
-        </div>
-      </nav>
-
-      <main className="mx-auto max-w-5xl px-6 py-10 md:px-10 md:py-12">
-        <Outlet context={{ group }} />
-      </main>
-    </div>
+        </>
+      }
+      footer={
+        <SidebarButton icon={<IconSignOut />} onClick={signOut}>
+          Sign out
+        </SidebarButton>
+      }
+    >
+      <Outlet context={{ group }} />
+    </SidebarShell>
   );
 }
