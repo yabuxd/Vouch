@@ -1,10 +1,30 @@
+# Dependencies & build
 node_modules/
 dist/
+build/
+
+# Secret credentials — never commit
 .env
 .env.*
 !.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Explicit env files (Supabase keys, JWT, API secrets)
 backend/.env
+backend/.env.local
+backend/.env.production
 frontend/.env
 frontend/.env.local
+frontend/.env.production
+scripts/.env
+
+# Logs & OS
 *.log
 .DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
