@@ -99,36 +99,55 @@ export async function generateDailyAssignments(): Promise<number> {
   return created;
 }
 
-export async function resetMissedStreaks(): Promise<void> {
+export async function resetMissedStreaks(): Promise<number> {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = yesterday.toISOString().split('T')[0];
 
-  const { data: dailyGoals } = await supabase
-    .from('goals')
-    .select('id')
-    .eq('frequency', 'daily')
-    .eq('is_active', true);
-
-  if (!dailyGoals?.length) return;
-
-  const goalIds = dailyGoals.map((g) => g.id);
-
   const { data: missed } = await supabase
     .from('goal_assignments')
-    .select('user_id, goals(group_id)')
-    .in('goal_id', goalIds)
+    .select('id, user_id, goal_id, goals!inner(group_id, frequency, is_active)')
     .eq('due_date', yesterdayStr)
     .neq('status', 'approved');
 
-  if (!missed?.length) return;
+  if (!missed?.length) return 0;
+
+  let eventsCreated = 0;
 
   for (const assignment of missed) {
-    const goals = assignment.goals as unknown as { group_id: string };
+    const goal = assignment.goals as unknown as {
+      group_id: string;
+      frequency: string;
+      is_active: boolean;
+    };
+
+    if (!goal.is_active || !['daily', 'weekly'].includes(goal.frequency)) continue;
+
+    const { data: membership } = await supabase
+      .from('group_members')
+      .select('current_streak')
+      .eq('user_id', assignment.user_id)
+      .eq('group_id', goal.group_id)
+      .single();
+
+    const streakBefore = membership?.current_streak ?? 0;
+
+    const { error: insertError } = await supabase.from('missed_events').insert({
+      group_id: goal.group_id,
+      member_id: assignment.user_id,
+      goal_id: assignment.goal_id,
+      goal_assignment_id: assignment.id,
+      streak_before: streakBefore,
+    });
+
+    if (!insertError) eventsCreated++;
+
     await supabase
       .from('group_members')
       .update({ current_streak: 0 })
       .eq('user_id', assignment.user_id)
-      .eq('group_id', goals.group_id);
+      .eq('group_id', goal.group_id);
   }
+
+  return eventsCreated;
 }

@@ -94,9 +94,23 @@ export type Submission = {
   status: string;
   submitted_at: string;
   already_voted?: boolean;
+  approval_count?: number;
+  rejection_count?: number;
+  approval_threshold?: number;
   profiles?: { id: string; name: string };
-  goal_assignments?: { goals: { title: string } };
+  goal_assignments?: { goals: { title: string; points_value?: number } };
   approvals?: Array<{ decision: string; profiles?: { name: string } }>;
+};
+
+export type VoteResult = {
+  approvals: number;
+  rejections: number;
+  threshold: number;
+  resolved: boolean;
+  approved?: boolean;
+  points_awarded?: number;
+  new_points?: number;
+  new_streak?: number;
 };
 
 export type LeaderboardEntry = {
@@ -114,4 +128,30 @@ export type GroupDashboard = {
   my_streak: number;
   pending_assignments: GoalAssignment[];
   pending_approvals_count: number;
+};
+
+export type MissedEvent = {
+  id: string;
+  group_id: string;
+  member_id: string;
+  goal_id: string;
+  goal_assignment_id: string;
+  streak_before: number;
+  created_at: string;
+  member: { id: string; name: string; avatar_url: string | null };
+  goal: { id: string; title: string };
+  reaction_counts: Array<{ emoji: string; count: number }>;
+  my_reaction: string | null;
+};
+
+export type MissedFeed = {
+  events: MissedEvent[];
+  total: number;
+  has_more: boolean;
+  available_emojis: string[];
+};
+
+export type MissedReactionResult = {
+  action: 'added' | 'updated' | 'removed';
+  emoji: string | null;
 };

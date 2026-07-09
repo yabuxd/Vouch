@@ -1,67 +1,115 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link, useOutletContext, useParams } from 'react-router-dom';
-import { api, type Group, type GroupDashboard } from '../lib/api';
+import { api, type Group, type GroupDashboard, type MissedFeed } from '../lib/api';
 import { GoalCard } from '../components/GoalCard';
 import { InviteCodeBanner } from '../components/InviteCodeBanner';
+import { PlayerStatsPanel } from '../components/gamification/PlayerStatsPanel';
+import { MissedEventCard } from '../components/gamification/MissedEventCard';
 
 export function GroupDashboardPage() {
   const { id } = useParams<{ id: string }>();
   const { group } = useOutletContext<{ group: Group | null }>();
   const [dashboard, setDashboard] = useState<GroupDashboard | null>(null);
+  const [missedFeed, setMissedFeed] = useState<MissedFeed | null>(null);
+  const [loadingMissed, setLoadingMissed] = useState(true);
+
+  const loadMissed = useCallback(() => {
+    if (!id) return;
+    setLoadingMissed(true);
+    api<MissedFeed>(`/groups/${id}/missed-feed?limit=10`)
+      .then(setMissedFeed)
+      .catch(console.error)
+      .finally(() => setLoadingMissed(false));
+  }, [id]);
 
   useEffect(() => {
     if (id) api<GroupDashboard>(`/groups/${id}/dashboard`).then(setDashboard).catch(console.error);
   }, [id]);
 
+  useEffect(() => {
+    loadMissed();
+  }, [loadMissed]);
+
+  const memberCount = group?.members?.length ?? 0;
+
   return (
     <div className="space-y-12">
-      <div className="stat-strip">
-        <div className="stat-cell">
-          <p className="label-caps">Rank</p>
-          <p className="mt-2 font-display text-4xl font-bold text-ink">
-            {dashboard?.my_rank ? dashboard.my_rank : '—'}
-          </p>
-        </div>
-        <div className="stat-cell px-6">
-          <p className="label-caps">Points</p>
-          <p className="mt-2 font-display text-4xl font-bold text-accent">{dashboard?.my_points ?? 0}</p>
-        </div>
-        <div className="stat-cell pl-6">
-          <p className="label-caps">Streak</p>
-          <p className="mt-2 font-display text-4xl font-bold text-streak">
-            {(dashboard?.my_streak ?? 0) > 0 ? dashboard?.my_streak : '0'}
-            <span className="ml-1 font-body text-base font-normal text-ink-muted">days</span>
-          </p>
-        </div>
-      </div>
+      <PlayerStatsPanel
+        rank={dashboard?.my_rank ?? null}
+        points={dashboard?.my_points ?? 0}
+        streak={dashboard?.my_streak ?? 0}
+        memberCount={memberCount}
+      />
 
       {(dashboard?.pending_approvals_count ?? 0) > 0 && (
-        <Link to={`/groups/${id}/approve`} className="alert-warn block hover:opacity-90">
-          {dashboard?.pending_approvals_count} proof{dashboard?.pending_approvals_count === 1 ? '' : 's'} waiting for your vouch →
+        <Link to={`/groups/${id}/approve`} className="quest-alert block">
+          <span className="quest-alert-icon">⚡</span>
+          <span>
+            <strong>{dashboard?.pending_approvals_count} proof{dashboard?.pending_approvals_count === 1 ? '' : 's'}</strong>
+            {' '}waiting for your vouch — earn crew karma →
+          </span>
         </Link>
       )}
 
       {group && <InviteCodeBanner group={group} />}
 
       <section>
-        <div className="flex items-end justify-between gap-4 border-b border-rule pb-3">
-          <p className="label-caps">Due now</p>
+        <div className="section-header">
+          <div>
+            <p className="label-caps">Active quests</p>
+            <p className="section-sub">Complete these to rack up points.</p>
+          </div>
           <Link to={`/groups/${id}/tasks`} className="btn btn-ghost">
-            Manage tasks
+            All tasks
           </Link>
         </div>
 
         {dashboard?.pending_assignments?.length ? (
-          <div className="mt-2 divide-y divide-rule">
+          <div className="quest-list">
             {dashboard.pending_assignments.map((a) => (
               <GoalCard key={a.id} assignment={a} />
             ))}
           </div>
         ) : (
-          <p className="mt-8 text-sm text-ink-muted">
-            Nothing due right now.{' '}
-            <Link to={`/groups/${id}/tasks`} className="link">Add a task</Link> to get moving.
-          </p>
+          <div className="empty-quest">
+            <p className="empty-quest-icon">◎</p>
+            <p className="text-sm text-ink-muted">
+              No active quests.{' '}
+              <Link to={`/groups/${id}/tasks`} className="link">Pick up a task</Link> to start earning.
+            </p>
+          </div>
+        )}
+      </section>
+
+      <section>
+        <div className="section-header">
+          <div>
+            <p className="label-caps">Missed quests</p>
+            <p className="section-sub">Crew misses happen — react and rally.</p>
+          </div>
+          <button type="button" onClick={loadMissed} className="btn btn-ghost">
+            Refresh
+          </button>
+        </div>
+
+        {loadingMissed ? (
+          <p className="text-sm text-ink-muted">Loading missed quests…</p>
+        ) : missedFeed?.events.length ? (
+          <div className="missed-list">
+            {missedFeed.events.map((event) => (
+              <MissedEventCard
+                key={event.id}
+                event={event}
+                availableEmojis={missedFeed.available_emojis}
+                onReactionChange={loadMissed}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="empty-quest">
+            <p className="empty-quest-icon">✓</p>
+            <p className="text-sm text-ink-muted">No missed quests lately — the crew&apos;s on fire.</p>
+          </div>
         )}
       </section>
     </div>

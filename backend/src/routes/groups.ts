@@ -133,7 +133,13 @@ router.get('/:id', async (req: AuthRequest, res) => {
 
     const myMembership = members?.find((m) => m.user_id === req.userId);
 
-    res.json({ ...group, members, my_role: myMembership?.role });
+    res.json({
+      ...group,
+      members,
+      my_role: myMembership?.role,
+      my_points: myMembership?.points ?? 0,
+      my_streak: myMembership?.current_streak ?? 0,
+    });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }

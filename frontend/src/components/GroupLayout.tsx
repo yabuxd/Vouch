@@ -13,10 +13,13 @@ import {
   IconSettings,
   IconSignOut,
 } from './SidebarIcons';
+import { getLevelInfo } from '../lib/gamification';
+import { StreakFlame } from './gamification/StreakFlame';
+import { XpBar } from './gamification/XpBar';
 
 const navItems = [
   { to: '', label: 'Overview', icon: <IconOverview />, end: true },
-  { to: 'tasks', label: 'Tasks', icon: <IconTasks /> },
+  { to: 'tasks', label: 'Quests', icon: <IconTasks /> },
   { to: 'submit', label: 'Send proof', icon: <IconProof /> },
   { to: 'approve', label: 'Vouch', icon: <IconVouch /> },
   { to: 'leaderboard', label: 'Standings', icon: <IconStandings /> },
@@ -36,6 +39,8 @@ export function GroupLayout() {
     (item) => !item.ownerOnly || group?.my_role === 'owner'
   );
 
+  const level = getLevelInfo(group?.my_points ?? 0);
+
   return (
     <SidebarShell
       title={group?.name ?? 'Crew'}
@@ -52,6 +57,21 @@ export function GroupLayout() {
           <p className="mt-3 font-display text-lg font-semibold leading-tight text-ink">
             {group?.name ?? '…'}
           </p>
+          {group && (
+            <div className="sidebar-player-card">
+              <div className="sidebar-player-top">
+                <span className="sidebar-player-level">Lv.{level.level}</span>
+                <span className="font-mono text-sm text-accent">{group.my_points ?? 0} pts</span>
+              </div>
+              {(group.my_streak ?? 0) > 0 && <StreakFlame streak={group.my_streak!} size="sm" />}
+              <XpBar
+                progress={level.progress}
+                xpInLevel={level.xpInLevel}
+                xpToNext={level.xpToNext}
+                compact
+              />
+            </div>
+          )}
           <p className="label-caps mt-4">Navigation</p>
         </>
       }

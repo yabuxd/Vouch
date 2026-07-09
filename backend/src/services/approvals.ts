@@ -57,16 +57,18 @@ export async function processVote(
   const rejections = (votes ?? []).filter((v) => v.decision === 'reject').length;
 
   if (approvals >= threshold) {
-    await finalizeApproval(submission, groupId, ga.goals.points_value, ga.goals.frequency);
+    const result = await finalizeApproval(submission, groupId, ga.goals.points_value, ga.goals.frequency);
+    return { approvals, rejections, threshold, resolved: true, approved: true, ...result };
   } else if (rejections >= threshold) {
     await supabase.from('submissions').update({ status: 'rejected' }).eq('id', submissionId);
     await supabase
       .from('goal_assignments')
       .update({ status: 'rejected' })
       .eq('id', submission.goal_assignment_id);
+    return { approvals, rejections, threshold, resolved: true, approved: false };
   }
 
-  return { approvals, rejections, threshold, resolved: approvals >= threshold || rejections >= threshold };
+  return { approvals, rejections, threshold, resolved: false };
 }
 
 async function finalizeApproval(
@@ -103,4 +105,6 @@ async function finalizeApproval(
     submission_id: submission.id,
     points: pointsValue,
   });
+
+  return { points_awarded: pointsValue, new_points: newPoints, new_streak: newStreak };
 }

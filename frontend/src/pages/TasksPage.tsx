@@ -32,31 +32,42 @@ export function TasksPage() {
   const groupTasks = goals.filter((g) => g.type === 'group');
   const myTasks = goals.filter((g) => g.type === 'individual' && g.created_by === user?.id);
 
-  if (loading) return <p className="text-sm text-ink-muted">Loading tasks…</p>;
+  const totalAvailable = assignments
+    .filter((a) => ['pending', 'rejected'].includes(a.status))
+    .reduce((sum, a) => sum + (a.goals?.points_value ?? 0), 0);
+
+  if (loading) return <p className="text-sm text-ink-muted">Loading quests…</p>;
 
   return (
     <div className="space-y-14">
+      {totalAvailable > 0 && (
+        <div className="loot-banner">
+          <span className="loot-banner-icon">◎</span>
+          <span><strong>{totalAvailable} pts</strong> up for grabs right now</span>
+        </div>
+      )}
+
       <section>
-        <div className="flex items-end justify-between gap-4 border-b border-rule pb-3">
+        <div className="section-header">
           <div>
-            <p className="label-caps">Group tasks</p>
-            <p className="mt-1 text-sm text-ink-muted">Shared — everyone in the crew is on the hook.</p>
+            <p className="label-caps">Crew quests</p>
+            <p className="section-sub">Everyone&apos;s on the hook for these.</p>
           </div>
           {isOwner ? (
             <Link to={`/groups/${id}/goals/new?type=group`} className="btn btn-accent shrink-0">
-              Add group task
+              + Crew quest
             </Link>
           ) : (
-            <span className="text-xs text-ink-muted">Owner adds group tasks</span>
+            <span className="text-xs text-ink-muted">Owner sets crew quests</span>
           )}
         </div>
         {groupTasks.length === 0 ? (
           <p className="mt-8 text-sm text-ink-muted">
-            No group tasks yet.
-            {isOwner ? ' Set one the whole crew has to hit.' : ' Ask the owner to add one.'}
+            No crew quests yet.
+            {isOwner ? ' Drop one the whole crew has to hit.' : ' Ask the owner to add one.'}
           </p>
         ) : (
-          <div className="mt-2">
+          <div className="quest-list">
             {groupTasks.map((goal) => (
               <TaskRow key={goal.id} goal={goal} assignment={assignmentForGoal(goal.id)} />
             ))}
@@ -65,19 +76,19 @@ export function TasksPage() {
       </section>
 
       <section>
-        <div className="flex items-end justify-between gap-4 border-b border-rule pb-3">
+        <div className="section-header">
           <div>
-            <p className="label-caps">My tasks</p>
-            <p className="mt-1 text-sm text-ink-muted">Personal — only you answer for these.</p>
+            <p className="label-caps">Solo quests</p>
+            <p className="section-sub">Personal grinds — only you answer for these.</p>
           </div>
           <Link to={`/groups/${id}/goals/new?type=individual`} className="btn btn-ghost shrink-0">
-            Add my task
+            + Solo quest
           </Link>
         </div>
         {myTasks.length === 0 ? (
-          <p className="mt-8 text-sm text-ink-muted">No personal tasks yet. Add one that&apos;s just yours.</p>
+          <p className="mt-8 text-sm text-ink-muted">No solo quests yet. Add one that&apos;s just yours.</p>
         ) : (
-          <div className="mt-2">
+          <div className="quest-list">
             {myTasks.map((goal) => (
               <TaskRow key={goal.id} goal={goal} assignment={assignmentForGoal(goal.id)} />
             ))}

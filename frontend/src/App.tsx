@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { GroupLayout } from './components/GroupLayout';
@@ -12,6 +12,7 @@ import { TasksPage } from './pages/TasksPage';
 import { SubmissionUploadPage } from './pages/SubmissionUploadPage';
 import { ApprovalQueuePage } from './pages/ApprovalQueuePage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
+import { LandingPage } from './pages/LandingPage';
 import { JoinPage } from './pages/JoinPage';
 
 export default function App() {
@@ -22,7 +23,7 @@ export default function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/join" element={<JoinPage />} />
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<LandingPage />} />
           <Route
             path="/dashboard"
             element={

@@ -79,12 +79,20 @@ router.get('/groups/:id/submissions/pending', async (req: AuthRequest, res) => {
       return;
     }
 
+    const { data: group } = await supabase
+      .from('groups')
+      .select('approval_threshold')
+      .eq('id', groupId)
+      .single();
+
+    const threshold = group?.approval_threshold ?? 2;
+
     const { data: submissions } = await supabase
       .from('submissions')
       .select(`
         *,
         profiles(id, name, avatar_url),
-        goal_assignments(goal_id, goals(title, group_id)),
+        goal_assignments(goal_id, goals(title, group_id, points_value)),
         approvals(decision, approver_id)
       `)
       .eq('status', 'pending')
@@ -96,12 +104,23 @@ router.get('/groups/:id/submissions/pending', async (req: AuthRequest, res) => {
       const ga = sub.goal_assignments as { goals: { group_id: string; title: string } } | null;
       if (ga?.goals?.group_id !== groupId) continue;
 
-      const alreadyVoted = (sub.approvals as Array<{ approver_id: string }> ?? []).some(
+      const alreadyVoted = (sub.approvals as Array<{ approver_id: string; decision: string }> ?? []).some(
         (a) => a.approver_id === req.userId
       );
 
+      const votes = sub.approvals as Array<{ decision: string }> ?? [];
+      const approval_count = votes.filter((v) => v.decision === 'approve').length;
+      const rejection_count = votes.filter((v) => v.decision === 'reject').length;
+
       const signedUrl = await getSignedUrl(sub.screenshot_url);
-      filtered.push({ ...sub, screenshot_signed_url: signedUrl, already_voted: alreadyVoted });
+      filtered.push({
+        ...sub,
+        screenshot_signed_url: signedUrl,
+        already_voted: alreadyVoted,
+        approval_count,
+        rejection_count,
+        approval_threshold: threshold,
+      });
     }
 
     res.json(filtered);

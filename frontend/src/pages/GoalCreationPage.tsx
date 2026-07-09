@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
 import { api, type Group } from '../lib/api';
+import { PointsReward } from '../components/gamification/PointsReward';
 
 export function GoalCreationPage() {
   const { id } = useParams<{ id: string }>();
@@ -54,9 +55,9 @@ export function GoalCreationPage() {
 
   return (
     <div className="max-w-lg">
-      <Link to={`/groups/${id}/tasks`} className="text-sm text-ink-muted hover:text-accent">← Back to tasks</Link>
-      <h2 className="mt-6 font-display text-2xl font-bold text-ink">Add a task</h2>
-      <p className="mt-2 text-sm text-ink-muted">Who&apos;s accountable, and how often?</p>
+      <Link to={`/groups/${id}/tasks`} className="text-sm text-ink-muted hover:text-accent">← Back to quests</Link>
+      <h2 className="mt-6 font-display text-2xl font-bold text-ink">Create a quest</h2>
+      <p className="section-sub">Set the challenge. Set the reward.</p>
 
       {error && <p className="alert-error mt-6">{error}</p>}
 
@@ -67,15 +68,15 @@ export function GoalCreationPage() {
           onClick={() => setType('group')}
           className={`type-card ${type === 'group' ? 'type-card-selected-group' : ''}`}
         >
-          <p className="font-semibold text-ink">Group task</p>
-          <p className="mt-1 text-xs text-ink-muted">Whole crew must complete</p>
+          <p className="font-semibold text-ink">Crew quest</p>
+          <p className="mt-1 text-xs text-ink-muted">Whole crew on the hook</p>
         </button>
         <button
           type="button"
           onClick={() => setType('individual')}
           className={`type-card ${type === 'individual' ? 'type-card-selected-personal' : ''}`}
         >
-          <p className="font-semibold text-ink">My task</p>
+          <p className="font-semibold text-ink">Solo quest</p>
           <p className="mt-1 text-xs text-ink-muted">Just you, on the line</p>
         </button>
       </div>
@@ -106,11 +107,15 @@ export function GoalCreationPage() {
           </div>
         )}
         <div>
-          <label className="label-caps">Points when vouched</label>
-          <input type="number" min={1} max={100} value={pointsValue} onChange={(e) => setPointsValue(Number(e.target.value))} className="input" />
+          <label className="label-caps">Point reward</label>
+          <div className="flex items-center gap-4 mt-2">
+            <input type="range" min={5} max={50} step={5} value={pointsValue} onChange={(e) => setPointsValue(Number(e.target.value))} className="reward-slider flex-1" />
+            <PointsReward points={pointsValue} size="lg" pulse />
+          </div>
+          <p className="mt-2 text-xs text-ink-muted">Awarded when the crew vouches the proof</p>
         </div>
         <button type="submit" disabled={loading} className="btn btn-primary btn-full">
-          {loading ? 'Creating…' : type === 'group' ? 'Create group task' : 'Create my task'}
+          {loading ? 'Creating…' : `Launch ${type === 'group' ? 'crew' : 'solo'} quest (+${pointsValue} pts)`}
         </button>
       </form>
     </div>

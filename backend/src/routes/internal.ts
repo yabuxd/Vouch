@@ -6,9 +6,9 @@ const router = Router();
 
 router.post('/generate-daily-assignments', requireCronSecret, async (_req, res) => {
   try {
-    await resetMissedStreaks();
+    const missedEvents = await resetMissedStreaks();
     const created = await generateDailyAssignments();
-    res.json({ created });
+    res.json({ created, missed_events: missedEvents });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }

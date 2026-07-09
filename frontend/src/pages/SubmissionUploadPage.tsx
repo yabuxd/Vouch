@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { api, apiUpload, type GroupDashboard } from '../lib/api';
+import { PointsReward } from '../components/gamification/PointsReward';
 
 export function SubmissionUploadPage() {
   const { id } = useParams<{ id: string }>();
@@ -26,6 +27,9 @@ export function SubmissionUploadPage() {
       });
     }
   }, [id, selectedId]);
+
+  const selected = assignments.find((a) => a.id === selectedId);
+  const rewardPoints = selected?.goals?.points_value ?? 0;
 
   const handleFile = (f: File) => {
     setFile(f);
@@ -60,16 +64,25 @@ export function SubmissionUploadPage() {
   return (
     <div className="max-w-xl">
       <h2 className="font-display text-2xl font-bold text-ink">Send proof</h2>
-      <p className="mt-2 text-sm text-ink-muted">Screenshot it. Your crew vouches before it counts.</p>
+      <p className="section-sub">Snap it. Your crew vouches before the points land.</p>
+
+      {rewardPoints > 0 && (
+        <div className="reward-preview">
+          <span className="label-caps">Reward</span>
+          <PointsReward points={rewardPoints} size="lg" pulse />
+          <p className="text-xs text-ink-muted">Awarded when your crew vouches</p>
+        </div>
+      )}
+
       {error && <p className="alert-error mt-6">{error}</p>}
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-6">
         <div>
-          <label className="label-caps">Task</label>
+          <label className="label-caps">Quest</label>
           <select value={selectedId} onChange={(e) => setSelectedId(e.target.value)} className="select">
             {assignments.map((a) => (
               <option key={a.id} value={a.id}>
-                {a.goals?.title} — due {a.due_date}
+                {a.goals?.title} — {a.goals?.points_value} pts — due {a.due_date}
               </option>
             ))}
           </select>
@@ -84,7 +97,10 @@ export function SubmissionUploadPage() {
           {preview ? (
             <img src={preview} alt="Preview" className="mx-auto max-h-56" />
           ) : (
-            <p className="text-sm text-ink-muted">Drop a screenshot here, or choose a file</p>
+            <div className="drop-zone-prompt">
+              <span className="drop-zone-icon">📸</span>
+              <p className="text-sm text-ink-muted">Drop your screenshot here, or choose a file</p>
+            </div>
           )}
           <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])} className="mt-4 text-sm" />
         </div>
@@ -95,7 +111,7 @@ export function SubmissionUploadPage() {
         </div>
 
         <button type="submit" disabled={loading || !file || !selectedId} className="btn btn-primary btn-full">
-          {loading ? 'Uploading…' : 'Submit for vouching'}
+          {loading ? 'Uploading…' : `Submit for vouching (+${rewardPoints} pts)`}
         </button>
       </form>
     </div>
