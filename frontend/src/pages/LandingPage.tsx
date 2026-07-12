@@ -63,6 +63,15 @@ const testimonials = [
   { quote: 'The standings are petty. That\'s why it works.', role: 'Sample quote — roommate accountability crew' },
 ];
 
+const contact = {
+  email: 'yabuxd56@gmail.com',
+  socials: [
+    { label: 'X / Twitter', handle: '@yabuxd', href: 'https://x.com/yabuxd' },
+    { label: 'Instagram', handle: '@yabu_xd', href: 'https://instagram.com/yabu_xd' },
+    { label: 'Telegram', handle: '@yabuxd56', href: 'https://t.me/yabuxd56' },
+  ],
+};
+
 function scrollTo(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
 }
@@ -77,6 +86,7 @@ export function LandingPage() {
             <button type="button" onClick={() => scrollTo('how-it-works')}>How it works</button>
             <button type="button" onClick={() => scrollTo('features')}>Features</button>
             <button type="button" onClick={() => scrollTo('faq')}>FAQ</button>
+            <button type="button" onClick={() => scrollTo('contact')}>Contact</button>
           </nav>
           <div className="landing-nav-actions">
             <Link to="/login" className="landing-link-btn">Log in</Link>
@@ -195,6 +205,36 @@ export function LandingPage() {
         </div>
       </section>
 
+      <section id="contact" className="landing-section landing-section-raised">
+        <div className="landing-container landing-contact">
+          <div className="landing-contact-copy">
+            <p className="label-caps">Contact</p>
+            <h2 className="landing-section-title font-display">Say hey</h2>
+            <p className="landing-contact-body">
+              Questions, feedback, or want to build a crew together? Reach out anytime.
+            </p>
+            <a className="landing-contact-email font-mono" href={`mailto:${contact.email}`}>
+              {contact.email}
+            </a>
+          </div>
+          <ul className="landing-socials">
+            {contact.socials.map((s) => (
+              <li key={s.label}>
+                <a
+                  className="landing-social-link"
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span className="landing-social-label">{s.label}</span>
+                  <span className="landing-social-handle font-mono">{s.handle}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
       <section className="landing-cta-band">
         <div className="landing-container landing-cta-inner">
           <h2 className="font-display landing-cta-title">
@@ -210,10 +250,19 @@ export function LandingPage() {
           <div>
             <p className="landing-logo font-display">Vouch</p>
             <p className="landing-footer-tagline">Proof + crew approval = points that count.</p>
+            <nav className="landing-footer-socials" aria-label="Social">
+              <a href={`mailto:${contact.email}`}>Email</a>
+              {contact.socials.map((s) => (
+                <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer">
+                  {s.label}
+                </a>
+              ))}
+            </nav>
           </div>
           <nav className="landing-footer-nav" aria-label="Footer">
             <button type="button" onClick={() => scrollTo('how-it-works')}>How it works</button>
             <button type="button" onClick={() => scrollTo('features')}>Features</button>
+            <button type="button" onClick={() => scrollTo('contact')}>Contact</button>
             <Link to="/login">Log in</Link>
             <Link to="/signup">Sign up</Link>
           </nav>

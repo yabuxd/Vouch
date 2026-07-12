@@ -1604,6 +1604,78 @@ body {
   color: var(--color-ink-muted);
 }
 
+.landing-contact {
+  display: grid;
+  gap: 2.5rem;
+}
+
+@media (min-width: 768px) {
+  .landing-contact {
+    grid-template-columns: 1.2fr 1fr;
+    align-items: end;
+    gap: 3rem;
+  }
+}
+
+.landing-contact-body {
+  margin: 0.75rem 0 0;
+  max-width: 28rem;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--color-ink-muted);
+}
+
+.landing-contact-email {
+  display: inline-block;
+  margin-top: 1.25rem;
+  font-size: 1.05rem;
+  color: var(--color-accent);
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
+}
+
+.landing-contact-email:hover {
+  border-bottom-color: var(--color-accent);
+}
+
+.landing-socials {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.landing-social-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid var(--color-rule);
+  text-decoration: none;
+  color: var(--color-ink);
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.landing-social-link:hover {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
+
+.landing-social-label {
+  font-size: 0.9375rem;
+}
+
+.landing-social-handle {
+  font-size: 0.8125rem;
+  color: var(--color-ink-muted);
+}
+
+.landing-social-link:hover .landing-social-handle {
+  color: var(--color-accent);
+}
+
 .landing-cta-band {
   background: var(--color-accent);
   color: var(--color-raised);
@@ -1659,6 +1731,23 @@ body {
   margin: 0.5rem 0 0;
   font-size: 0.875rem;
   color: var(--color-ink-muted);
+}
+
+.landing-footer-socials {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin-top: 1rem;
+}
+
+.landing-footer-socials a {
+  font-size: 0.8125rem;
+  color: var(--color-ink-muted);
+  text-decoration: none;
+}
+
+.landing-footer-socials a:hover {
+  color: var(--color-ink);
 }
 
 .landing-footer-nav {
