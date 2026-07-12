@@ -1,6 +1,6 @@
 import express from 'express';
-import cors from 'cors';
 import dotenv from 'dotenv';
+import { createCorsMiddleware } from './cors-config.js';
 import { requireAuth } from './middleware/auth.js';
 import groupsRouter from './routes/groups.js';
 import goalsRouter from './routes/goals.js';
@@ -16,7 +16,7 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3001;
 
-app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173' }));
+app.use(createCorsMiddleware());
 app.use(express.json());
 
 app.get('/api/v1/health', (_req, res) => {

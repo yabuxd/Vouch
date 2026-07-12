@@ -1,7 +1,8 @@
 import { refreshAuthSession, supabase } from './supabase';
 import { ApiError, getApiErrorMessage, statusFallback } from './errors';
+import { createNetworkError, getApiConfigError, getApiUrl } from './api-config';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
+const API_URL = getApiUrl();
 
 async function getToken(): Promise<string | null> {
   const { data } = await supabase.auth.getSession();
@@ -49,6 +50,10 @@ async function request<T>(
   parse: (res: Response) => Promise<T>,
 ): Promise<T> {
   const { _retried, ...fetchOptions } = options;
+
+  const configError = getApiConfigError();
+  if (configError) throw configError;
+
   const token = await getToken();
   const headers: Record<string, string> = {
     ...(fetchOptions.headers as Record<string, string>),
@@ -63,11 +68,7 @@ async function request<T>(
   try {
     res = await fetch(`${API_URL}${path}`, { ...fetchOptions, headers });
   } catch {
-    throw new ApiError(
-      'Could not reach the server. Check your connection and try again.',
-      0,
-      'network_error',
-    );
+    throw createNetworkError();
   }
 
   if (!res.ok) {

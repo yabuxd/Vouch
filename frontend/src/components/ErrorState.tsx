@@ -15,17 +15,21 @@ export function ErrorState({ error, title, onRetry, homeLink = true }: ErrorStat
       ? error.message
       : 'Something went wrong. Try again.';
 
+  const code = error instanceof ApiError ? error.code : undefined;
+
   const heading =
     title ??
-    (status === 404
-      ? 'Not found'
-      : status === 403
-        ? 'Access denied'
-        : status === 401
-          ? 'Session expired'
-          : status === 0
-            ? 'Connection problem'
-            : 'Something went wrong');
+    (code === 'config_error'
+      ? 'Configuration problem'
+      : status === 404
+        ? 'Not found'
+        : status === 403
+          ? 'Access denied'
+          : status === 401
+            ? 'Session expired'
+            : status === 0
+              ? 'Connection problem'
+              : 'Something went wrong');
 
   return (
     <div className="error-state" role="alert">
