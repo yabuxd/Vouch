@@ -1,5 +1,17 @@
 import type { AuthError } from '@supabase/supabase-js';
 
+export class ApiError extends Error {
+  status: number;
+  code: string;
+
+  constructor(message: string, status = 500, code = 'api_error') {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.code = code;
+  }
+}
+
 export function getAuthErrorMessage(error: AuthError | null): string {
   if (!error) return 'Something went wrong';
   if (error.message) return error.message;
@@ -28,4 +40,41 @@ export function getApiErrorMessage(data: unknown, fallback: string): string {
   if (typeof record.msg === 'string' && record.msg.length > 0) return record.msg;
 
   return fallback;
+}
+
+export function statusFallback(status: number): string {
+  switch (status) {
+    case 400:
+      return 'That request was invalid. Check your input and try again.';
+    case 401:
+      return 'Your session expired. Sign in again.';
+    case 403:
+      return 'You do not have permission to do that.';
+    case 404:
+      return 'We could not find what you were looking for.';
+    case 409:
+      return 'That conflicts with existing data. Refresh and try again.';
+    case 413:
+      return 'That upload is too large.';
+    case 429:
+      return 'Too many requests. Wait a moment and try again.';
+    case 500:
+    case 502:
+    case 503:
+    case 504:
+      return 'The server hit a snag. Try again in a moment.';
+    default:
+      return status >= 500 ? 'Server error. Try again shortly.' : 'Request failed. Try again.';
+  }
+}
+
+export function toUserErrorMessage(err: unknown): string {
+  if (err instanceof ApiError) return err.message;
+  if (err instanceof Error && err.message) {
+    if (/failed to fetch|networkerror|load failed/i.test(err.message)) {
+      return 'Could not reach the server. Check your connection and try again.';
+    }
+    return err.message;
+  }
+  return 'Something went wrong. Try again.';
 }

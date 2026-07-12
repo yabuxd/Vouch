@@ -1,10 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link, useOutletContext, useParams } from 'react-router-dom';
 import { api, type Group, type GroupDashboard, type MissedFeed } from '../lib/api';
+import { toUserErrorMessage } from '../lib/errors';
 import { GoalCard } from '../components/GoalCard';
 import { InviteCodeBanner } from '../components/InviteCodeBanner';
 import { PlayerStatsPanel } from '../components/gamification/PlayerStatsPanel';
 import { MissedEventCard } from '../components/gamification/MissedEventCard';
+import { ErrorState } from '../components/ErrorState';
 
 export function GroupDashboardPage() {
   const { id } = useParams<{ id: string }>();
@@ -12,23 +14,36 @@ export function GroupDashboardPage() {
   const [dashboard, setDashboard] = useState<GroupDashboard | null>(null);
   const [missedFeed, setMissedFeed] = useState<MissedFeed | null>(null);
   const [loadingMissed, setLoadingMissed] = useState(true);
+  const [error, setError] = useState<unknown>(null);
 
   const loadMissed = useCallback(() => {
     if (!id) return;
     setLoadingMissed(true);
     api<MissedFeed>(`/groups/${id}/missed-feed?limit=10`)
       .then(setMissedFeed)
-      .catch(console.error)
+      .catch((err) => console.error(toUserErrorMessage(err)))
       .finally(() => setLoadingMissed(false));
   }, [id]);
 
-  useEffect(() => {
-    if (id) api<GroupDashboard>(`/groups/${id}/dashboard`).then(setDashboard).catch(console.error);
+  const loadDashboard = useCallback(() => {
+    if (!id) return;
+    setError(null);
+    api<GroupDashboard>(`/groups/${id}/dashboard`)
+      .then(setDashboard)
+      .catch((err) => setError(err));
   }, [id]);
+
+  useEffect(() => {
+    loadDashboard();
+  }, [loadDashboard]);
 
   useEffect(() => {
     loadMissed();
   }, [loadMissed]);
+
+  if (error) {
+    return <ErrorState error={error} onRetry={loadDashboard} homeLink={false} />;
+  }
 
   const memberCount = group?.members?.length ?? 0;
 

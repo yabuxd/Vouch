@@ -34,6 +34,18 @@ app.use('/api/v1/goals', requireAuth, assignmentsRouter);
 app.use('/api/v1', requireAuth, submissionsRouter);
 app.use('/api/v1/submissions', requireAuth, approvalsRouter);
 
+app.use((_req, res) => {
+  res.status(404).json({ error: 'Not found' });
+});
+
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error(err);
+  const status = (err as Error & { status?: number }).status;
+  res.status(typeof status === 'number' ? status : 500).json({
+    error: err.message || 'Internal server error',
+  });
+});
+
 app.listen(port, () => {
   console.log(`Vouch API running on http://localhost:${port}`);
 });

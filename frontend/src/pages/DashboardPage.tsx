@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, type Group } from '../lib/api';
+import { toUserErrorMessage } from '../lib/errors';
 import { useAuth } from '../hooks/useAuth';
 import { SidebarShell } from '../components/SidebarShell';
 import { SidebarButton } from '../components/SidebarLink';
 import { IconAddCrew, IconInvite, IconSignOut } from '../components/SidebarIcons';
+import { ErrorState } from '../components/ErrorState';
 import { getLevelInfo } from '../lib/gamification';
 import { LevelBadge } from '../components/gamification/LevelBadge';
 import { StreakFlame } from '../components/gamification/StreakFlame';
@@ -15,6 +17,8 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<unknown>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [showJoin, setShowJoin] = useState(false);
   const [name, setName] = useState('');
@@ -22,12 +26,18 @@ export function DashboardPage() {
   const [inviteCode, setInviteCode] = useState('');
   const [error, setError] = useState('');
 
-  useEffect(() => {
+  const loadGroups = useCallback(() => {
+    setLoading(true);
+    setLoadError(null);
     api<Group[]>('/groups')
       .then(setGroups)
-      .catch(console.error)
+      .catch((err) => setLoadError(err))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    loadGroups();
+  }, [loadGroups]);
 
   const totalPoints = groups.reduce((sum, g) => sum + (g.my_points ?? 0), 0);
   const bestStreak = Math.max(0, ...groups.map((g) => g.my_streak ?? 0));
@@ -36,6 +46,7 @@ export function DashboardPage() {
   const createGroup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSubmitting(true);
     try {
       const group = await api<Group>('/groups', {
         method: 'POST',
@@ -44,13 +55,16 @@ export function DashboardPage() {
       setShowCreate(false);
       navigate(`/groups/${group.id}`);
     } catch (err) {
-      setError((err as Error).message);
+      setError(toUserErrorMessage(err));
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const joinGroup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSubmitting(true);
     try {
       const { group } = await api<{ group: Group }>('/groups/join', {
         method: 'POST',
@@ -59,9 +73,19 @@ export function DashboardPage() {
       setShowJoin(false);
       navigate(`/groups/${group.id}`);
     } catch (err) {
-      setError((err as Error).message);
+      setError(toUserErrorMessage(err));
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  if (loadError) {
+    return (
+      <div className="error-page">
+        <ErrorState error={loadError} onRetry={loadGroups} />
+      </div>
+    );
+  }
 
   return (
     <SidebarShell
@@ -111,7 +135,9 @@ export function DashboardPage() {
           <p className="label-caps">New crew</p>
           <input placeholder="Crew name" value={name} onChange={(e) => setName(e.target.value)} required className="input" />
           <textarea placeholder="What's this crew about? (optional)" value={description} onChange={(e) => setDescription(e.target.value)} className="textarea" rows={2} />
-          <button type="submit" className="btn btn-primary">Create crew</button>
+          <button type="submit" disabled={submitting} className="btn btn-primary">
+            {submitting ? 'Creating…' : 'Create crew'}
+          </button>
         </form>
       )}
 
@@ -119,7 +145,9 @@ export function DashboardPage() {
         <form onSubmit={joinGroup} className="panel-inset mb-10 space-y-4">
           <p className="label-caps">Invite code</p>
           <input placeholder="XXXXXXXX" value={inviteCode} onChange={(e) => setInviteCode(e.target.value.toUpperCase())} required className="input font-mono uppercase tracking-widest" />
-          <button type="submit" className="btn btn-primary">Join crew</button>
+          <button type="submit" disabled={submitting} className="btn btn-primary">
+            {submitting ? 'Joining…' : 'Join crew'}
+          </button>
         </form>
       )}
 

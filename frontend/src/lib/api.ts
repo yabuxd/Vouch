@@ -1,11 +1,44 @@
 import { supabase } from './supabase';
-import { getApiErrorMessage } from './errors';
+import { ApiError, getApiErrorMessage, statusFallback } from './errors';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
 
 async function getToken(): Promise<string | null> {
   const { data } = await supabase.auth.getSession();
   return data.session?.access_token ?? null;
+}
+
+async function parseErrorBody(res: Response): Promise<unknown> {
+  const text = await res.text().catch(() => '');
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { message: text.slice(0, 200) };
+  }
+}
+
+async function throwForResponse(res: Response, fallback: string): Promise<never> {
+  const body = await parseErrorBody(res);
+  const message = getApiErrorMessage(body, statusFallback(res.status) || fallback);
+
+  if (res.status === 401) {
+    await supabase.auth.signOut().catch(() => {});
+  }
+
+  throw new ApiError(message, res.status);
+}
+
+async function parseJson<T>(res: Response): Promise<T> {
+  const text = await res.text();
+  if (!text) {
+    return undefined as T;
+  }
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    throw new ApiError('Server returned an invalid response.', res.status, 'invalid_json');
+  }
 }
 
 export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -19,30 +52,47 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
     headers['Content-Type'] = 'application/json';
   }
 
-  const res = await fetch(`${API_URL}${path}`, { ...options, headers });
-
-  if (!res.ok) {
-    const err = await res.json().catch(() => null);
-    throw new Error(getApiErrorMessage(err, res.statusText || 'Request failed'));
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, { ...options, headers });
+  } catch {
+    throw new ApiError(
+      'Could not reach the server. Check your connection and try again.',
+      0,
+      'network_error',
+    );
   }
 
-  return res.json();
+  if (!res.ok) {
+    await throwForResponse(res, 'Request failed');
+  }
+
+  return parseJson<T>(res);
 }
 
 export async function apiUpload<T>(path: string, formData: FormData): Promise<T> {
   const token = await getToken();
-  const res = await fetch(`${API_URL}${path}`, {
-    method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-    body: formData,
-  });
 
-  if (!res.ok) {
-    const err = await res.json().catch(() => null);
-    throw new Error(getApiErrorMessage(err, res.statusText || 'Upload failed'));
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+  } catch {
+    throw new ApiError(
+      'Could not reach the server. Check your connection and try again.',
+      0,
+      'network_error',
+    );
   }
 
-  return res.json();
+  if (!res.ok) {
+    await throwForResponse(res, 'Upload failed');
+  }
+
+  return parseJson<T>(res);
 }
 
 export type Group = {

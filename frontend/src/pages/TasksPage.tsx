@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useOutletContext, useParams } from 'react-router-dom';
 import { api, type Goal, type GoalAssignment, type Group, type GroupDashboard } from '../lib/api';
 import { useAuth } from '../hooks/useAuth';
 import { TaskRow } from '../components/TaskRow';
+import { ErrorState } from '../components/ErrorState';
 
 export function TasksPage() {
   const { id } = useParams<{ id: string }>();
@@ -11,11 +12,14 @@ export function TasksPage() {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [assignments, setAssignments] = useState<GoalAssignment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<unknown>(null);
 
   const isOwner = group?.my_role === 'owner';
 
-  useEffect(() => {
+  const load = useCallback(() => {
     if (!id) return;
+    setLoading(true);
+    setError(null);
     Promise.all([
       api<Goal[]>(`/groups/${id}/goals`),
       api<GroupDashboard>(`/groups/${id}/dashboard`),
@@ -24,9 +28,13 @@ export function TasksPage() {
         setGoals(goalsData);
         setAssignments(dashboard.pending_assignments);
       })
-      .catch(console.error)
+      .catch((err) => setError(err))
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const assignmentForGoal = (goalId: string) => assignments.find((a) => a.goal_id === goalId);
   const groupTasks = goals.filter((g) => g.type === 'group');
@@ -37,7 +45,7 @@ export function TasksPage() {
     .reduce((sum, a) => sum + (a.goals?.points_value ?? 0), 0);
 
   if (loading) return <p className="text-sm text-ink-muted">Loading quests…</p>;
-
+  if (error) return <ErrorState error={error} onRetry={load} homeLink={false} />;
   return (
     <div className="space-y-14">
       {totalAvailable > 0 && (

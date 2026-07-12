@@ -1,28 +1,33 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { api, type LeaderboardEntry } from '../lib/api';
 import { useAuth } from '../hooks/useAuth';
 import { LeaderboardTable } from '../components/LeaderboardTable';
 import { Podium } from '../components/gamification/Podium';
+import { ErrorState } from '../components/ErrorState';
 
 export function LeaderboardPage() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<unknown>(null);
 
-  const load = () => {
+  const load = useCallback(() => {
     if (!id) return;
     setLoading(true);
+    setError(null);
     api<LeaderboardEntry[]>(`/groups/${id}/leaderboard`)
       .then(setEntries)
-      .catch(console.error)
+      .catch((err) => setError(err))
       .finally(() => setLoading(false));
-  };
+  }, [id]);
 
-  useEffect(() => { load(); }, [id]);
+  useEffect(() => { load(); }, [load]);
 
   const myEntry = entries.find((e) => e.user_id === user?.id);
+
+  if (error) return <ErrorState error={error} onRetry={load} homeLink={false} />;
 
   return (
     <div>

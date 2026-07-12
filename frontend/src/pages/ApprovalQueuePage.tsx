@@ -1,28 +1,35 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { api, type Submission, type VoteResult } from '../lib/api';
+import { toUserErrorMessage } from '../lib/errors';
 import { SubmissionCard } from '../components/SubmissionCard';
 import { CelebrationToast } from '../components/gamification/CelebrationToast';
+import { ErrorState } from '../components/ErrorState';
 
 export function ApprovalQueuePage() {
   const { id } = useParams<{ id: string }>();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [voting, setVoting] = useState(false);
+  const [error, setError] = useState<unknown>(null);
+  const [actionError, setActionError] = useState('');
   const [celebration, setCelebration] = useState<{ message: string; sub?: string } | null>(null);
 
-  const load = () => {
+  const load = useCallback(() => {
     if (!id) return;
+    setLoading(true);
+    setError(null);
     api<Submission[]>(`/groups/${id}/submissions/pending`)
       .then(setSubmissions)
-      .catch(console.error)
+      .catch((err) => setError(err))
       .finally(() => setLoading(false));
-  };
+  }, [id]);
 
-  useEffect(() => { load(); }, [id]);
+  useEffect(() => { load(); }, [load]);
 
   const handleVote = async (submissionId: string, decision: 'approve' | 'reject') => {
     setVoting(true);
+    setActionError('');
     try {
       const result = await api<VoteResult>(`/submissions/${submissionId}/vote`, {
         method: 'POST',
@@ -45,13 +52,14 @@ export function ApprovalQueuePage() {
 
       load();
     } catch (err) {
-      alert((err as Error).message);
+      setActionError(toUserErrorMessage(err));
     } finally {
       setVoting(false);
     }
   };
 
   if (loading) return <p className="text-sm text-ink-muted">Loading queue…</p>;
+  if (error) return <ErrorState error={error} onRetry={load} homeLink={false} />;
 
   return (
     <div>
@@ -62,6 +70,8 @@ export function ApprovalQueuePage() {
           onDone={() => setCelebration(null)}
         />
       )}
+
+      {actionError && <p className="alert-error mb-6">{actionError}</p>}
 
       <div className="section-header section-header-flush">
         <div>
