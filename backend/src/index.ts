@@ -16,7 +16,31 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3001;
 
-app.use(cors({ origin: process.env.FRONTEND_URL || 'http://localhost:5173' }));
+const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
+  .split(',')
+  .map((origin) => origin.trim().replace(/\/$/, ''))
+  .filter(Boolean);
+
+app.use(
+  cors({
+    origin(origin, callback) {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      const clean = origin.replace(/\/$/, '');
+      const allowed =
+        allowedOrigins.includes('*') ||
+        allowedOrigins.includes(clean) ||
+        (/\.vercel\.app$/i.test(clean) &&
+          allowedOrigins.some((o) => o.includes('vercel.app')));
+
+      callback(null, allowed);
+    },
+    credentials: true,
+  }),
+);
 app.use(express.json());
 
 app.get('/api/v1/health', (_req, res) => {
@@ -36,4 +60,5 @@ app.use('/api/v1/submissions', requireAuth, approvalsRouter);
 
 app.listen(port, () => {
   console.log(`Vouch API running on http://localhost:${port}`);
+  console.log(`CORS allowed origins: ${allowedOrigins.join(', ') || '(none)'}`);
 });
