@@ -46,7 +46,7 @@ export async function processVote(
     .eq('id', groupId)
     .single();
 
-  const threshold = group?.approval_threshold ?? 2;
+  const threshold = Math.max(1, group?.approval_threshold ?? 2);
 
   const { data: votes } = await supabase
     .from('approvals')
@@ -58,13 +58,23 @@ export async function processVote(
 
   if (approvals >= threshold) {
     const result = await finalizeApproval(submission, groupId, ga.goals.points_value, ga.goals.frequency);
-    return { approvals, rejections, threshold, resolved: true, approved: true, ...result };
+    return { approvals, rejections, threshold, resolved: result.claimed, approved: true, ...result };
   } else if (rejections >= threshold) {
-    await supabase.from('submissions').update({ status: 'rejected' }).eq('id', submissionId);
-    await supabase
-      .from('goal_assignments')
+    const { data: rejected } = await supabase
+      .from('submissions')
       .update({ status: 'rejected' })
-      .eq('id', submission.goal_assignment_id);
+      .eq('id', submissionId)
+      .eq('status', 'pending')
+      .select('id')
+      .maybeSingle();
+
+    if (rejected) {
+      await supabase
+        .from('goal_assignments')
+        .update({ status: 'rejected' })
+        .eq('id', submission.goal_assignment_id);
+    }
+
     return { approvals, rejections, threshold, resolved: true, approved: false };
   }
 
@@ -77,7 +87,19 @@ async function finalizeApproval(
   pointsValue: number,
   frequency: string
 ) {
-  await supabase.from('submissions').update({ status: 'approved' }).eq('id', submission.id);
+  // Claim the submission atomically — only one concurrent finalizer wins
+  const { data: claimed } = await supabase
+    .from('submissions')
+    .update({ status: 'approved' })
+    .eq('id', submission.id)
+    .eq('status', 'pending')
+    .select('id')
+    .maybeSingle();
+
+  if (!claimed) {
+    return { claimed: false, points_awarded: 0 };
+  }
+
   await supabase
     .from('goal_assignments')
     .update({ status: 'approved' })
@@ -106,5 +128,5 @@ async function finalizeApproval(
     points: pointsValue,
   });
 
-  return { points_awarded: pointsValue, new_points: newPoints, new_streak: newStreak };
+  return { claimed: true, points_awarded: pointsValue, new_points: newPoints, new_streak: newStreak };
 }

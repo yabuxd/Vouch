@@ -38,10 +38,31 @@ export function JoinPage() {
         <div className="max-w-sm text-center">
           <h1 className="font-display text-2xl font-bold text-ink">Join a crew</h1>
           <p className="mt-3 text-sm text-ink-muted">
-            Sign in first. Invite code: <span className="font-mono tracking-widest">{code}</span>
+            Sign in first. Invite code: <span className="font-mono tracking-widest">{code || '—'}</span>
           </p>
-          <button onClick={() => navigate(`/login`)} className="btn btn-primary mt-8">
+          <button
+            onClick={() =>
+              navigate('/login', {
+                state: { from: { pathname: '/join', search: code ? `?code=${encodeURIComponent(code)}` : '' } },
+              })
+            }
+            className="btn btn-primary mt-8"
+          >
             Sign in to join
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!code) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-surface px-6">
+        <div className="max-w-sm text-center">
+          <h1 className="font-display text-2xl font-bold text-ink">Missing invite code</h1>
+          <p className="mt-3 text-sm text-ink-muted">Open the invite link you were sent, or join from the dashboard.</p>
+          <button onClick={() => navigate('/dashboard')} className="btn btn-primary mt-8">
+            Go to dashboard
           </button>
         </div>
       </div>

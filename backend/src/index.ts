@@ -13,6 +13,23 @@ import { missedFeedRouter, missedEventRouter } from './routes/missed-events.js';
 
 dotenv.config();
 
+const requiredEnv = ['SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'FRONTEND_URL'] as const;
+const missing = requiredEnv.filter((key) => {
+  const value = process.env[key]?.trim();
+  return !value || value.includes('your-project') || value.includes('your-secret') || value.includes('your-anon');
+});
+
+if (missing.length > 0) {
+  console.error(`Missing or placeholder env vars: ${missing.join(', ')}`);
+  if (process.env.NODE_ENV === 'production') {
+    process.exit(1);
+  }
+}
+
+if (!process.env.CRON_SECRET || process.env.CRON_SECRET === 'change-me-for-daily-cron') {
+  console.warn('CRON_SECRET is weak or default — set a strong secret before enabling cron.');
+}
+
 const app = express();
 const port = process.env.PORT || 3001;
 
@@ -28,20 +45,12 @@ app.use(
         callback(null, true);
         return;
       }
-
       const clean = origin.replace(/\/$/, '');
-      const allowed =
-        allowedOrigins.includes('*') ||
-        allowedOrigins.includes(clean) ||
-        (/\.vercel\.app$/i.test(clean) &&
-          allowedOrigins.some((o) => o.includes('vercel.app')));
-
-      callback(null, allowed);
+      callback(null, allowedOrigins.includes(clean));
     },
-    credentials: true,
   }),
 );
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
 
 app.get('/api/v1/health', (_req, res) => {
   res.json({ status: 'ok' });
@@ -58,7 +67,16 @@ app.use('/api/v1/goals', requireAuth, assignmentsRouter);
 app.use('/api/v1', requireAuth, submissionsRouter);
 app.use('/api/v1/submissions', requireAuth, approvalsRouter);
 
+app.use((_req, res) => {
+  res.status(404).json({ error: 'Not found' });
+});
+
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error(err);
+  res.status(500).json({ error: err.message || 'Internal server error' });
+});
+
 app.listen(port, () => {
-  console.log(`Vouch API running on http://localhost:${port}`);
+  console.log(`Vouch API running on port ${port}`);
   console.log(`CORS allowed origins: ${allowedOrigins.join(', ') || '(none)'}`);
 });

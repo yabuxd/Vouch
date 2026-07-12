@@ -13,6 +13,9 @@ if (!supabaseUrl || !supabaseServiceKey || PLACEHOLDER_KEYS.includes(supabaseSer
     '\n⚠️  Missing SUPABASE_SERVICE_ROLE_KEY in backend/.env\n' +
     '   Get it from Supabase Dashboard → Project Settings → API → secret key (sb_secret_...)\n'
   );
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required in production');
+  }
 }
 
 export const supabase = createClient(supabaseUrl ?? '', supabaseServiceKey ?? '', {

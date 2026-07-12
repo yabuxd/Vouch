@@ -25,7 +25,11 @@ procastination/
 ### 1. Supabase Project
 
 1. Create a project at [supabase.com](https://supabase.com)
-2. Go to **SQL Editor** and run the full contents of [`supabase/migrations/001_initial_schema.sql`](supabase/migrations/001_initial_schema.sql)
+2. Go to **SQL Editor** and run migrations in order:
+   - [`supabase/migrations/001_initial_schema.sql`](supabase/migrations/001_initial_schema.sql)
+   - [`supabase/migrations/002_fix_profile_trigger.sql`](supabase/migrations/002_fix_profile_trigger.sql)
+   - [`supabase/migrations/003_missed_events.sql`](supabase/migrations/003_missed_events.sql)
+   - [`supabase/migrations/004_harden_rls.sql`](supabase/migrations/004_harden_rls.sql)
 3. Enable **Email** auth under Authentication → Providers
 4. Under Authentication → URL Configuration, add `http://localhost:5173` as a redirect URL
 5. Confirm the `proof-screenshots` storage bucket was created (Storage → Buckets)

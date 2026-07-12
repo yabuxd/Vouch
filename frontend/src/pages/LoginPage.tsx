@@ -1,11 +1,16 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { getAuthErrorMessage } from '../lib/errors';
 import { AuthShell } from '../components/AuthShell';
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as { from?: { pathname?: string; search?: string } } | null)?.from;
+  const redirectTo = from?.pathname
+    ? `${from.pathname}${from.search ?? ''}`
+    : '/dashboard';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -21,7 +26,7 @@ export function LoginPage() {
       setError(getAuthErrorMessage(err));
       return;
     }
-    navigate('/dashboard');
+    navigate(redirectTo);
   };
 
   return (

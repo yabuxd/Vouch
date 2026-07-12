@@ -15,6 +15,7 @@ export function DashboardPage() {
   const navigate = useNavigate();
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
   const [showJoin, setShowJoin] = useState(false);
   const [name, setName] = useState('');
@@ -25,7 +26,7 @@ export function DashboardPage() {
   useEffect(() => {
     api<Group[]>('/groups')
       .then(setGroups)
-      .catch(console.error)
+      .catch((err) => setError((err as Error).message))
       .finally(() => setLoading(false));
   }, []);
 
@@ -36,6 +37,7 @@ export function DashboardPage() {
   const createGroup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSubmitting(true);
     try {
       const group = await api<Group>('/groups', {
         method: 'POST',
@@ -45,12 +47,15 @@ export function DashboardPage() {
       navigate(`/groups/${group.id}`);
     } catch (err) {
       setError((err as Error).message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const joinGroup = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSubmitting(true);
     try {
       const { group } = await api<{ group: Group }>('/groups/join', {
         method: 'POST',
@@ -60,6 +65,8 @@ export function DashboardPage() {
       navigate(`/groups/${group.id}`);
     } catch (err) {
       setError((err as Error).message);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -111,7 +118,9 @@ export function DashboardPage() {
           <p className="label-caps">New crew</p>
           <input placeholder="Crew name" value={name} onChange={(e) => setName(e.target.value)} required className="input" />
           <textarea placeholder="What's this crew about? (optional)" value={description} onChange={(e) => setDescription(e.target.value)} className="textarea" rows={2} />
-          <button type="submit" className="btn btn-primary">Create crew</button>
+          <button type="submit" disabled={submitting} className="btn btn-primary">
+            {submitting ? 'Creating…' : 'Create crew'}
+          </button>
         </form>
       )}
 
@@ -119,7 +128,9 @@ export function DashboardPage() {
         <form onSubmit={joinGroup} className="panel-inset mb-10 space-y-4">
           <p className="label-caps">Invite code</p>
           <input placeholder="XXXXXXXX" value={inviteCode} onChange={(e) => setInviteCode(e.target.value.toUpperCase())} required className="input font-mono uppercase tracking-widest" />
-          <button type="submit" className="btn btn-primary">Join crew</button>
+          <button type="submit" disabled={submitting} className="btn btn-primary">
+            {submitting ? 'Joining…' : 'Join crew'}
+          </button>
         </form>
       )}
 

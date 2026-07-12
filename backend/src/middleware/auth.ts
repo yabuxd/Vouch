@@ -30,8 +30,14 @@ export async function requireAuth(req: AuthRequest, res: Response, next: NextFun
 }
 
 export function requireCronSecret(req: Request, res: Response, next: NextFunction) {
+  const configured = process.env.CRON_SECRET;
   const secret = req.headers['x-cron-secret'];
-  if (!secret || secret !== process.env.CRON_SECRET) {
+  if (
+    !configured ||
+    configured === 'change-me-for-daily-cron' ||
+    !secret ||
+    secret !== configured
+  ) {
     res.status(403).json({ error: 'Forbidden' });
     return;
   }

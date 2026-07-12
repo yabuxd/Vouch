@@ -42,11 +42,17 @@ router.post('/', async (req: AuthRequest, res) => {
       return;
     }
 
-    await supabase.from('group_members').insert({
+    const { error: memberErr } = await supabase.from('group_members').insert({
       group_id: group.id,
       user_id: req.userId,
       role: 'owner',
     });
+
+    if (memberErr) {
+      await supabase.from('groups').delete().eq('id', group.id);
+      res.status(500).json({ error: 'Failed to create crew membership' });
+      return;
+    }
 
     res.status(201).json(group);
   } catch (err) {
@@ -85,11 +91,16 @@ router.post('/join', async (req: AuthRequest, res) => {
       return;
     }
 
-    await supabase.from('group_members').insert({
+    const { error: joinErr } = await supabase.from('group_members').insert({
       group_id: group.id,
       user_id: req.userId,
       role: 'member',
     });
+
+    if (joinErr) {
+      res.status(500).json({ error: 'Failed to join crew' });
+      return;
+    }
 
     res.json({ group, already_member: false });
   } catch (err) {
@@ -157,7 +168,14 @@ router.patch('/:id', async (req: AuthRequest, res) => {
     const updates: Record<string, unknown> = {};
     if (name !== undefined) updates.name = name;
     if (description !== undefined) updates.description = description;
-    if (approval_threshold !== undefined) updates.approval_threshold = approval_threshold;
+    if (approval_threshold !== undefined) {
+      const threshold = Number(approval_threshold);
+      if (!Number.isInteger(threshold) || threshold < 1 || threshold > 20) {
+        res.status(400).json({ error: 'approval_threshold must be an integer from 1 to 20' });
+        return;
+      }
+      updates.approval_threshold = threshold;
+    }
     if (weekly_reset_enabled !== undefined) updates.weekly_reset_enabled = weekly_reset_enabled;
 
     const { data, error } = await supabase
