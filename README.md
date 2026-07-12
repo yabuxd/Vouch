@@ -27,7 +27,12 @@ procastination/
 1. Create a project at [supabase.com](https://supabase.com)
 2. Go to **SQL Editor** and run the full contents of [`supabase/migrations/001_initial_schema.sql`](supabase/migrations/001_initial_schema.sql)
 3. Enable **Email** auth under Authentication → Providers
-4. Under Authentication → URL Configuration, add `http://localhost:5173` as a redirect URL
+4. Under **Authentication → URL Configuration**:
+   - **Site URL:** your production Vercel URL (e.g. `https://your-app.vercel.app`) — not `localhost`
+   - **Redirect URLs** (add both):
+     - `https://your-app.vercel.app/**`
+     - `http://localhost:5173/**`
+   Confirmation emails use `emailRedirectTo` → `/auth/callback` on the current site origin (or `VITE_SITE_URL` if set).
 5. Confirm the `proof-screenshots` storage bucket was created (Storage → Buckets)
 6. Copy from **Project Settings → API**:
    - Project URL
@@ -103,9 +108,10 @@ Invite code: `STUDYSQD`
 ### Frontend (Vercel)
 
 1. Import the `frontend/` directory
-2. Set environment variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_API_URL`
-3. Build command: `npm run build`
-4. Output directory: `dist`
+2. Set environment variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_API_URL` (optional: `VITE_SITE_URL` = your Vercel URL)
+3. In Supabase → Authentication → URL Configuration, set **Site URL** to your Vercel URL and add redirect URLs as in setup step 4
+4. Build command: `npm run build`
+5. Output directory: `dist`
 
 ### Backend (Render / Railway)
 

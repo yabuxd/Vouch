@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { getAuthErrorMessage } from '../lib/errors';
+import { getAuthCallbackUrl } from '../lib/site-config';
 import { AuthShell } from '../components/AuthShell';
 
 export function SignupPage() {
@@ -21,7 +22,10 @@ export function SignupPage() {
     const { data, error: err } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { name } },
+      options: {
+        data: { name },
+        emailRedirectTo: getAuthCallbackUrl(),
+      },
     });
     setLoading(false);
     if (err) {
@@ -29,7 +33,9 @@ export function SignupPage() {
       return;
     }
     if (!data.session) {
-      setSuccess('Account created. Check your email to confirm, then sign in.');
+      setSuccess(
+        `Account created. We sent a confirmation link to ${email}. Open it to verify your account, then sign in.`,
+      );
       return;
     }
     navigate('/dashboard');

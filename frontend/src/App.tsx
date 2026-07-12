@@ -5,6 +5,7 @@ import { GroupLayout } from './components/GroupLayout';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
+import { AuthCallbackPage } from './pages/AuthCallbackPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { GroupDashboardPage } from './pages/GroupDashboardPage';
 import { GroupSettingsPage } from './pages/GroupSettingsPage';
@@ -25,6 +26,7 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
+            <Route path="/auth/callback" element={<AuthCallbackPage />} />
             <Route path="/join" element={<JoinPage />} />
             <Route path="/" element={<LandingPage />} />
             <Route
