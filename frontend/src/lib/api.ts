@@ -1,4 +1,4 @@
-import { supabase } from './supabase';
+import { refreshAuthSession, supabase } from './supabase';
 import { ApiError, getApiErrorMessage, statusFallback } from './errors';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1';
@@ -41,20 +41,27 @@ async function parseJson<T>(res: Response): Promise<T> {
   }
 }
 
-export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
+type ApiOptions = RequestInit & { _retried?: boolean };
+
+async function request<T>(
+  path: string,
+  options: ApiOptions,
+  parse: (res: Response) => Promise<T>,
+): Promise<T> {
+  const { _retried, ...fetchOptions } = options;
   const token = await getToken();
   const headers: Record<string, string> = {
-    ...(options.headers as Record<string, string>),
+    ...(fetchOptions.headers as Record<string, string>),
   };
 
   if (token) headers.Authorization = `Bearer ${token}`;
-  if (!(options.body instanceof FormData)) {
+  if (!(fetchOptions.body instanceof FormData)) {
     headers['Content-Type'] = 'application/json';
   }
 
   let res: Response;
   try {
-    res = await fetch(`${API_URL}${path}`, { ...options, headers });
+    res = await fetch(`${API_URL}${path}`, { ...fetchOptions, headers });
   } catch {
     throw new ApiError(
       'Could not reach the server. Check your connection and try again.',
@@ -64,35 +71,28 @@ export async function api<T>(path: string, options: RequestInit = {}): Promise<T
   }
 
   if (!res.ok) {
+    if (res.status === 401 && !_retried) {
+      const refreshed = await refreshAuthSession();
+      if (refreshed?.access_token) {
+        return request<T>(path, { ...options, _retried: true }, parse);
+      }
+    }
     await throwForResponse(res, 'Request failed');
   }
 
-  return parseJson<T>(res);
+  return parse(res);
+}
+
+export async function api<T>(path: string, options: RequestInit = {}): Promise<T> {
+  return request<T>(path, options, parseJson);
 }
 
 export async function apiUpload<T>(path: string, formData: FormData): Promise<T> {
-  const token = await getToken();
-
-  let res: Response;
-  try {
-    res = await fetch(`${API_URL}${path}`, {
-      method: 'POST',
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      body: formData,
-    });
-  } catch {
-    throw new ApiError(
-      'Could not reach the server. Check your connection and try again.',
-      0,
-      'network_error',
-    );
-  }
-
-  if (!res.ok) {
-    await throwForResponse(res, 'Upload failed');
-  }
-
-  return parseJson<T>(res);
+  return request<T>(
+    path,
+    { method: 'POST', body: formData },
+    parseJson,
+  );
 }
 
 export type Group = {
