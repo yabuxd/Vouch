@@ -4,6 +4,13 @@ import { getAuthErrorMessage, toUserErrorMessage } from '../lib/errors';
 import { supabase } from '../lib/supabase';
 import { AuthShell } from '../components/AuthShell';
 
+function friendlyAuthError(raw: string, errorCode: string | null): string {
+  if (errorCode === 'otp_expired' || /invalid or has expired/i.test(raw)) {
+    return 'This confirmation link is invalid or was already used (email apps sometimes open links automatically). Sign up again for a fresh link, and make sure Supabase Site URL is your Vercel domain — not localhost.';
+  }
+  return raw;
+}
+
 export function AuthCallbackPage() {
   const navigate = useNavigate();
   const [error, setError] = useState('');
@@ -24,11 +31,20 @@ export function AuthCallbackPage() {
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
           if (exchangeError) throw exchangeError;
         } else if (hasHashTokens) {
+          if (hashParams.get('error')) {
+            throw new Error(
+              hashParams.get('error_description')?.replace(/\+/g, ' ') ??
+                hashParams.get('error') ??
+                'Confirmation failed',
+            );
+          }
           const { data, error: sessionError } = await supabase.auth.getSession();
           if (sessionError) throw sessionError;
           if (!data.session) {
-            const description = hashParams.get('error_description');
-            throw new Error(description ?? 'Invalid or expired confirmation link.');
+            throw new Error(
+              hashParams.get('error_description')?.replace(/\+/g, ' ') ??
+                'Invalid or expired confirmation link.',
+            );
           }
         } else {
           const { data, error: sessionError } = await supabase.auth.getSession();
@@ -41,11 +57,12 @@ export function AuthCallbackPage() {
         if (!cancelled) navigate('/dashboard', { replace: true });
       } catch (err) {
         if (!cancelled) {
-          setError(
+          const raw =
             err && typeof err === 'object' && 'message' in err && typeof (err as { message: string }).message === 'string' && 'status' in err
               ? getAuthErrorMessage(err as Parameters<typeof getAuthErrorMessage>[0])
-              : toUserErrorMessage(err),
-          );
+              : toUserErrorMessage(err);
+          const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+          setError(friendlyAuthError(raw, hashParams.get('error_code')));
           setConfirming(false);
         }
       }
@@ -82,8 +99,7 @@ export function AuthCallbackPage() {
     >
       {error && <p className="alert-error">{error}</p>}
       <p className="text-sm text-ink-muted">
-        Links expire after a while. Request a new confirmation email by signing up again, or sign in if
-        your account is already verified.
+        Request a new confirmation email by signing up again, or sign in if your account is already verified.
       </p>
     </AuthShell>
   );

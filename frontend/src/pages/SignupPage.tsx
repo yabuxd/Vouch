@@ -13,6 +13,9 @@ export function SignupPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
+  const [resending, setResending] = useState(false);
+
+  const emailRedirectTo = getAuthCallbackUrl();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,7 +27,7 @@ export function SignupPage() {
       password,
       options: {
         data: { name },
-        emailRedirectTo: getAuthCallbackUrl(),
+        emailRedirectTo,
       },
     });
     setLoading(false);
@@ -34,11 +37,31 @@ export function SignupPage() {
     }
     if (!data.session) {
       setSuccess(
-        `Account created. We sent a confirmation link to ${email}. Open it to verify your account, then sign in.`,
+        `Account created. Check ${email} for a confirmation link, then click Confirm email on the page that opens. (Do not reuse old emails.)`,
       );
       return;
     }
     navigate('/dashboard');
+  };
+
+  const resendConfirmation = async () => {
+    if (!email.trim()) {
+      setError('Enter your email above, then resend.');
+      return;
+    }
+    setResending(true);
+    setError('');
+    const { error: err } = await supabase.auth.resend({
+      type: 'signup',
+      email: email.trim(),
+      options: { emailRedirectTo },
+    });
+    setResending(false);
+    if (err) {
+      setError(getAuthErrorMessage(err));
+      return;
+    }
+    setSuccess(`A new confirmation email was sent to ${email}. Open the newest message only.`);
   };
 
   return (
@@ -70,6 +93,11 @@ export function SignupPage() {
         <button type="submit" disabled={loading} className="btn btn-primary btn-full">
           {loading ? 'Creating account…' : 'Create account'}
         </button>
+        {success && (
+          <button type="button" disabled={resending} className="btn btn-ghost btn-full" onClick={resendConfirmation}>
+            {resending ? 'Sending…' : 'Resend confirmation email'}
+          </button>
+        )}
       </form>
     </AuthShell>
   );
