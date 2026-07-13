@@ -19,6 +19,7 @@ import { LeaderboardPage } from './pages/LeaderboardPage';
 import { LandingPage } from './pages/LandingPage';
 import { JoinPage } from './pages/JoinPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { agentLog } from './lib/agent-log';
 
 function AuthHashDebugProbe() {
   const location = useLocation();
@@ -26,9 +27,18 @@ function AuthHashDebugProbe() {
   useEffect(() => {
     const hashParams = new URLSearchParams(location.hash.replace(/^#/, ''));
     if (!hashParams.get('error') && !hashParams.get('error_code')) return;
-    // #region agent log
-    fetch('http://127.0.0.1:7530/ingest/e6f5fe77-9e75-413a-a6e5-206191b52f12',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'78e600'},body:JSON.stringify({sessionId:'78e600',runId:'confirm-email',hypothesisId:'A-D-E',location:'App.tsx:AuthHashDebugProbe',message:'auth hash error on route',data:{origin:window.location.origin,pathname:location.pathname,hashError:hashParams.get('error'),hashErrorCode:hashParams.get('error_code'),hashErrorDescription:hashParams.get('error_description')},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
+    agentLog({
+      hypothesisId: 'A-D-E',
+      location: 'App.tsx:AuthHashDebugProbe',
+      message: 'auth hash error on route',
+      data: {
+        origin: window.location.origin,
+        pathname: location.pathname,
+        hashError: hashParams.get('error'),
+        hashErrorCode: hashParams.get('error_code'),
+        hashErrorDescription: hashParams.get('error_description'),
+      },
+    });
     if (location.pathname !== '/auth/callback') {
       navigate(`/auth/callback${location.hash}`, { replace: true });
     }

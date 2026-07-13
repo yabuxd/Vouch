@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { EmailOtpType } from '@supabase/supabase-js';
 import { getAuthErrorMessage, toUserErrorMessage } from '../lib/errors';
+import { agentLog } from '../lib/agent-log';
 import { supabase } from '../lib/supabase';
 import { AuthShell } from '../components/AuthShell';
 
@@ -26,9 +27,18 @@ export function AuthConfirmPage() {
   const confirm = async () => {
     setBusy(true);
     setError('');
-    // #region agent log
-    fetch('http://127.0.0.1:7530/ingest/e6f5fe77-9e75-413a-a6e5-206191b52f12',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'78e600'},body:JSON.stringify({sessionId:'78e600',runId:'post-fix',hypothesisId:'D',location:'AuthConfirmPage.tsx:confirm',message:'user clicked confirm',data:{hasConfirmationUrl:Boolean(payload.confirmationUrl),hasTokenHash:Boolean(payload.tokenHash),type:payload.type,origin:window.location.origin},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
+    agentLog({
+      hypothesisId: 'D',
+      location: 'AuthConfirmPage.tsx:confirm',
+      message: 'user clicked confirm',
+      runId: 'post-fix',
+      data: {
+        hasConfirmationUrl: Boolean(payload.confirmationUrl),
+        hasTokenHash: Boolean(payload.tokenHash),
+        type: payload.type,
+        origin: window.location.origin,
+      },
+    });
 
     try {
       if (payload.confirmationUrl) {
@@ -42,18 +52,26 @@ export function AuthConfirmPage() {
           type: payload.type || 'signup',
         });
         if (verifyError) throw verifyError;
-        // #region agent log
-        fetch('http://127.0.0.1:7530/ingest/e6f5fe77-9e75-413a-a6e5-206191b52f12',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'78e600'},body:JSON.stringify({sessionId:'78e600',runId:'post-fix',hypothesisId:'D',location:'AuthConfirmPage.tsx:verified',message:'verifyOtp success',data:{ok:true},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
+        agentLog({
+          hypothesisId: 'D',
+          location: 'AuthConfirmPage.tsx:verified',
+          message: 'verifyOtp success',
+          runId: 'post-fix',
+          data: { ok: true },
+        });
         navigate('/dashboard', { replace: true });
         return;
       }
 
       throw new Error('Missing confirmation details. Request a new signup email.');
     } catch (err) {
-      // #region agent log
-      fetch('http://127.0.0.1:7530/ingest/e6f5fe77-9e75-413a-a6e5-206191b52f12',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'78e600'},body:JSON.stringify({sessionId:'78e600',runId:'post-fix',hypothesisId:'D',location:'AuthConfirmPage.tsx:error',message:'confirm failed',data:{error:err instanceof Error?err.message:String(err)},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
+      agentLog({
+        hypothesisId: 'D',
+        location: 'AuthConfirmPage.tsx:error',
+        message: 'confirm failed',
+        runId: 'post-fix',
+        data: { error: err instanceof Error ? err.message : String(err) },
+      });
       setError(
         err && typeof err === 'object' && 'message' in err && typeof (err as { message: string }).message === 'string' && 'status' in err
           ? getAuthErrorMessage(err as Parameters<typeof getAuthErrorMessage>[0])

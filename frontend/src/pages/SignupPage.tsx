@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { getAuthErrorMessage } from '../lib/errors';
 import { getAuthCallbackUrl } from '../lib/site-config';
+import { agentLog } from '../lib/agent-log';
 import { AuthShell } from '../components/AuthShell';
 
 export function SignupPage() {
@@ -20,9 +21,17 @@ export function SignupPage() {
     setError('');
     setSuccess('');
     const emailRedirectTo = getAuthCallbackUrl();
-    // #region agent log
-    fetch('http://127.0.0.1:7530/ingest/e6f5fe77-9e75-413a-a6e5-206191b52f12',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'78e600'},body:JSON.stringify({sessionId:'78e600',runId:'confirm-email',hypothesisId:'A-B-C',location:'SignupPage.tsx:signUp',message:'signup redirect target',data:{emailRedirectTo,origin:typeof window!=='undefined'?window.location.origin:'',viteSiteUrl:import.meta.env.VITE_SITE_URL??null,host:typeof window!=='undefined'?window.location.host:''},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
+    agentLog({
+      hypothesisId: 'A-B-C',
+      location: 'SignupPage.tsx:signUp',
+      message: 'signup redirect target',
+      data: {
+        emailRedirectTo,
+        origin: typeof window !== 'undefined' ? window.location.origin : '',
+        viteSiteUrl: import.meta.env.VITE_SITE_URL ?? null,
+        host: typeof window !== 'undefined' ? window.location.host : '',
+      },
+    });
     const { data, error: err } = await supabase.auth.signUp({
       email,
       password,
@@ -31,9 +40,18 @@ export function SignupPage() {
         emailRedirectTo,
       },
     });
-    // #region agent log
-    fetch('http://127.0.0.1:7530/ingest/e6f5fe77-9e75-413a-a6e5-206191b52f12',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'78e600'},body:JSON.stringify({sessionId:'78e600',runId:'confirm-email',hypothesisId:'A-B-C',location:'SignupPage.tsx:signUpResult',message:'signup result',data:{hasError:Boolean(err),errorMessage:err?.message??null,hasSession:Boolean(data?.session),hasUser:Boolean(data?.user),identitiesCount:data?.user?.identities?.length??null},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
+    agentLog({
+      hypothesisId: 'A-B-C',
+      location: 'SignupPage.tsx:signUpResult',
+      message: 'signup result',
+      data: {
+        hasError: Boolean(err),
+        errorMessage: err?.message ?? null,
+        hasSession: Boolean(data?.session),
+        hasUser: Boolean(data?.user),
+        identitiesCount: data?.user?.identities?.length ?? null,
+      },
+    });
     setLoading(false);
     if (err) {
       setError(getAuthErrorMessage(err));
