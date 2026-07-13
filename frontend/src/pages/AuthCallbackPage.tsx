@@ -18,12 +18,18 @@ export function AuthCallbackPage() {
       const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
       const hasHashTokens =
         hashParams.has('access_token') || hashParams.has('error') || hashParams.has('error_description');
+      // #region agent log
+      fetch('http://127.0.0.1:7530/ingest/e6f5fe77-9e75-413a-a6e5-206191b52f12',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'78e600'},body:JSON.stringify({sessionId:'78e600',runId:'confirm-email',hypothesisId:'D-E',location:'AuthCallbackPage.tsx:start',message:'auth callback entry',data:{origin:window.location.origin,pathname:window.location.pathname,hasCode:Boolean(code),hashError:hashParams.get('error'),hashErrorCode:hashParams.get('error_code'),hashErrorDescription:hashParams.get('error_description'),hasHashTokens},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
 
       try {
         if (code) {
           const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
           if (exchangeError) throw exchangeError;
         } else if (hasHashTokens) {
+          if (hashParams.get('error')) {
+            throw new Error(hashParams.get('error_description') ?? hashParams.get('error') ?? 'Confirmation failed');
+          }
           const { data, error: sessionError } = await supabase.auth.getSession();
           if (sessionError) throw sessionError;
           if (!data.session) {
@@ -38,14 +44,26 @@ export function AuthCallbackPage() {
           }
         }
 
+        // #region agent log
+        fetch('http://127.0.0.1:7530/ingest/e6f5fe77-9e75-413a-a6e5-206191b52f12',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'78e600'},body:JSON.stringify({sessionId:'78e600',runId:'confirm-email',hypothesisId:'D-E',location:'AuthCallbackPage.tsx:success',message:'auth callback success',data:{ok:true},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         if (!cancelled) navigate('/dashboard', { replace: true });
       } catch (err) {
+        // #region agent log
+        fetch('http://127.0.0.1:7530/ingest/e6f5fe77-9e75-413a-a6e5-206191b52f12',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'78e600'},body:JSON.stringify({sessionId:'78e600',runId:'confirm-email',hypothesisId:'D-E',location:'AuthCallbackPage.tsx:error',message:'auth callback failed',data:{error:err instanceof Error?err.message:String(err)},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         if (!cancelled) {
-          setError(
+          const raw =
             err && typeof err === 'object' && 'message' in err && typeof (err as { message: string }).message === 'string' && 'status' in err
               ? getAuthErrorMessage(err as Parameters<typeof getAuthErrorMessage>[0])
-              : toUserErrorMessage(err),
-          );
+              : toUserErrorMessage(err);
+          const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+          const code = hashParams.get('error_code');
+          const friendly =
+            code === 'otp_expired' || /invalid or has expired/i.test(raw)
+              ? 'This confirmation link is invalid or was already used (email apps sometimes open it automatically). Sign up again to get a fresh link. Also set Supabase Site URL to your Vercel domain — not localhost.'
+              : raw;
+          setError(friendly);
           setConfirming(false);
         }
       }
