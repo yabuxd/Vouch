@@ -33,8 +33,16 @@ procastination/
      - `https://your-app.vercel.app/**`
      - `http://localhost:5173/**`
    Confirmation emails use `emailRedirectTo` → `/auth/callback` on the current site origin (or `VITE_SITE_URL` if set).
-5. Confirm the `proof-screenshots` storage bucket was created (Storage → Buckets)
-6. Copy from **Project Settings → API**:
+5. **Confirm signup email template** (prevents `otp_expired` from email scanners):  
+   Authentication → Email Templates → **Confirm signup** — use this link:
+
+   ```html
+   <a href="{{ .SiteURL }}/auth/confirm?confirmation_url={{ .ConfirmationURL }}">Confirm your email</a>
+   ```
+
+   Users open your site and click **Confirm email** once; scanners that only prefetch the page do not consume the one-time link.
+6. Confirm the `proof-screenshots` storage bucket was created (Storage → Buckets)
+7. Copy from **Project Settings → API**:
    - Project URL
    - `anon` / publishable key (`sb_publishable_...`) → frontend
    - **Secret key** (`sb_secret_...`) → backend only — never expose in frontend
