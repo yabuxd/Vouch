@@ -7,6 +7,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
 import { AuthCallbackPage } from './pages/AuthCallbackPage';
+import { AuthConfirmPage } from './pages/AuthConfirmPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { GroupDashboardPage } from './pages/GroupDashboardPage';
 import { GroupSettingsPage } from './pages/GroupSettingsPage';
@@ -45,6 +46,7 @@ export default function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/auth/callback" element={<AuthCallbackPage />} />
+            <Route path="/auth/confirm" element={<AuthConfirmPage />} />
             <Route path="/join" element={<JoinPage />} />
             <Route path="/" element={<LandingPage />} />
             <Route
