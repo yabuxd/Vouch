@@ -2,6 +2,19 @@
 
 Auth uses **Supabase Auth** (not Firebase). Fix these dashboard settings or confirmation emails will open `localhost` / show `otp_expired`.
 
+## Why links still open localhost
+
+Two separate values control where confirmation links point:
+
+| Source | Controls |
+|--------|----------|
+| **Supabase → Site URL** | Host in `{{ .SiteURL }}` inside email templates. If this is `http://localhost:5173`, the **email link** opens localhost even when users sign up on Vercel. |
+| **`emailRedirectTo` from the app** | Where Supabase sends the user **after** they confirm (our `/auth/callback`). The frontend sets this via `getAuthCallbackUrl()` using `VITE_SITE_URL` when defined, else `window.location.origin`. |
+
+The default template uses `{{ .ConfirmationURL }}` only — that still embeds redirect logic tied to Site URL. You must set **Site URL** to production **and** use the custom template below.
+
+`VITE_SITE_URL` does **not** change `{{ .SiteURL }}` in emails — only the Supabase dashboard Site URL does.
+
 ## 1. URL Configuration
 
 **Authentication → URL Configuration**
@@ -12,7 +25,7 @@ Auth uses **Supabase Auth** (not Firebase). Fix these dashboard settings or conf
 | **Redirect URLs** | `https://YOUR-APP.vercel.app/**` |
 | | `http://localhost:5173/**` |
 
-Do **not** leave Site URL as `http://localhost:5173`.
+Do **not** leave Site URL as `http://localhost:5173`. Save, then sign up again — old emails keep the old host.
 
 ## 2. Confirm signup email template
 
@@ -29,6 +42,8 @@ Replace the default confirmation link/button with:
   </a>
 </p>
 ```
+
+`{{ .SiteURL }}` is the **Site URL** from section 1 (dashboard), not `VITE_SITE_URL`.
 
 This lands users on `/auth/confirm` where they click **Confirm email** once. Email scanners that only prefetch the page do not consume the one-time token.
 
