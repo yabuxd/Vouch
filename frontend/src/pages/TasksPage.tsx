@@ -3,6 +3,7 @@ import { Link, useOutletContext, useParams } from 'react-router-dom';
 import { api, type Goal, type GoalAssignment, type Group, type GroupDashboard } from '../lib/api';
 import { useAuth } from '../hooks/useAuth';
 import { TaskRow } from '../components/TaskRow';
+import { TaskListSkeleton } from '../components/skeletons/PageSkeletons';
 import { ErrorState } from '../components/ErrorState';
 
 export function TasksPage() {
@@ -44,7 +45,7 @@ export function TasksPage() {
     .filter((a) => ['pending', 'rejected'].includes(a.status))
     .reduce((sum, a) => sum + (a.goals?.points_value ?? 0), 0);
 
-  if (loading) return <p className="text-sm text-ink-muted">Loading quests…</p>;
+  if (loading) return <TaskListSkeleton />;
   if (error) return <ErrorState error={error} onRetry={load} homeLink={false} />;
   return (
     <div className="space-y-14">

@@ -5,6 +5,7 @@ import { ApiError, toUserErrorMessage } from '../lib/errors';
 import { useAuth } from '../hooks/useAuth';
 import { SidebarShell } from './SidebarShell';
 import { SidebarLink, SidebarButton } from './SidebarLink';
+import { GroupLayoutSkeleton } from './skeletons/PageSkeletons';
 import { ErrorState } from './ErrorState';
 import {
   IconOverview,
@@ -50,11 +51,7 @@ export function GroupLayout() {
   }, [load]);
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-surface">
-        <p className="text-sm text-ink-muted">Loading crew…</p>
-      </div>
-    );
+    return <GroupLayoutSkeleton />;
   }
 
   if (error || !group) {

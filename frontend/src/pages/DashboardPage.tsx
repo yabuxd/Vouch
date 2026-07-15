@@ -6,6 +6,7 @@ import { useAuth } from '../hooks/useAuth';
 import { SidebarShell } from '../components/SidebarShell';
 import { SidebarButton } from '../components/SidebarLink';
 import { IconAddCrew, IconInvite, IconSignOut } from '../components/SidebarIcons';
+import { CrewListSkeleton } from '../components/skeletons/PageSkeletons';
 import { ErrorState } from '../components/ErrorState';
 import { getLevelInfo } from '../lib/gamification';
 import { LevelBadge } from '../components/gamification/LevelBadge';
@@ -153,7 +154,7 @@ export function DashboardPage() {
 
       <p className="label-caps">Your crews</p>
       {loading ? (
-        <p className="mt-6 text-sm text-ink-muted">Loading your crews…</p>
+        <CrewListSkeleton />
       ) : groups.length === 0 ? (
         <p className="mt-6 max-w-md text-sm leading-relaxed text-ink-muted">
           No crews yet — start one or grab an invite code from a friend.

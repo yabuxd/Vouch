@@ -4,6 +4,7 @@ import { api, type Submission, type VoteResult } from '../lib/api';
 import { toUserErrorMessage } from '../lib/errors';
 import { SubmissionCard } from '../components/SubmissionCard';
 import { CelebrationToast } from '../components/gamification/CelebrationToast';
+import { ApprovalQueueSkeleton } from '../components/skeletons/PageSkeletons';
 import { ErrorState } from '../components/ErrorState';
 
 export function ApprovalQueuePage() {
@@ -58,7 +59,7 @@ export function ApprovalQueuePage() {
     }
   };
 
-  if (loading) return <p className="text-sm text-ink-muted">Loading queue…</p>;
+  if (loading) return <ApprovalQueueSkeleton />;
   if (error) return <ErrorState error={error} onRetry={load} homeLink={false} />;
 
   return (

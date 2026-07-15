@@ -4,6 +4,7 @@ import { api, type LeaderboardEntry } from '../lib/api';
 import { useAuth } from '../hooks/useAuth';
 import { LeaderboardTable } from '../components/LeaderboardTable';
 import { Podium } from '../components/gamification/Podium';
+import { LeaderboardSkeleton } from '../components/skeletons/PageSkeletons';
 import { ErrorState } from '../components/ErrorState';
 
 export function LeaderboardPage() {
@@ -55,7 +56,7 @@ export function LeaderboardPage() {
       )}
 
       {loading ? (
-        <p className="mt-8 text-sm text-ink-muted">Loading standings…</p>
+        <LeaderboardSkeleton />
       ) : (
         <>
           <Podium entries={entries} currentUserId={user?.id} />
