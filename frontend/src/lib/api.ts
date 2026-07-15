@@ -210,3 +210,13 @@ export type MissedReactionResult = {
 export type ActivityHeatmap = {
   days: Record<string, number>;
 };
+
+export type WeeklyAnalysis = {
+  this_week: { points: number; completions: number };
+  last_week: { points: number; completions: number };
+  streak: number;
+  points_change_pct: number | null;
+  completions_change: number;
+  best_day: { date: string; label: string; count: number } | null;
+  insights: string[];
+};

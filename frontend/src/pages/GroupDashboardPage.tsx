@@ -1,11 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link, useOutletContext, useParams } from 'react-router-dom';
-import { api, type Group, type GroupDashboard, type MissedFeed, type ActivityHeatmap } from '../lib/api';
+import { api, type Group, type GroupDashboard, type MissedFeed, type ActivityHeatmap, type WeeklyAnalysis } from '../lib/api';
 import { toUserErrorMessage } from '../lib/errors';
 import { GoalCard } from '../components/GoalCard';
 import { InviteCodeBanner } from '../components/InviteCodeBanner';
 import { PlayerStatsPanel } from '../components/gamification/PlayerStatsPanel';
 import { ActivityHeatMap } from '../components/gamification/ActivityHeatMap';
+import { WeeklyAnalysis as WeeklyAnalysisPanel } from '../components/gamification/WeeklyAnalysis';
 import { MissedEventCard } from '../components/gamification/MissedEventCard';
 import { ErrorState } from '../components/ErrorState';
 
@@ -15,6 +16,8 @@ export function GroupDashboardPage() {
   const [dashboard, setDashboard] = useState<GroupDashboard | null>(null);
   const [activity, setActivity] = useState<ActivityHeatmap | null>(null);
   const [loadingActivity, setLoadingActivity] = useState(true);
+  const [weeklyAnalysis, setWeeklyAnalysis] = useState<WeeklyAnalysis | null>(null);
+  const [loadingWeekly, setLoadingWeekly] = useState(true);
   const [missedFeed, setMissedFeed] = useState<MissedFeed | null>(null);
   const [loadingMissed, setLoadingMissed] = useState(true);
   const [error, setError] = useState<unknown>(null);
@@ -45,6 +48,15 @@ export function GroupDashboardPage() {
       .finally(() => setLoadingActivity(false));
   }, [id]);
 
+  const loadWeeklyAnalysis = useCallback(() => {
+    if (!id) return;
+    setLoadingWeekly(true);
+    api<WeeklyAnalysis>(`/groups/${id}/weekly-analysis`)
+      .then(setWeeklyAnalysis)
+      .catch((err) => console.error(toUserErrorMessage(err)))
+      .finally(() => setLoadingWeekly(false));
+  }, [id]);
+
   useEffect(() => {
     loadDashboard();
   }, [loadDashboard]);
@@ -52,6 +64,10 @@ export function GroupDashboardPage() {
   useEffect(() => {
     loadActivity();
   }, [loadActivity]);
+
+  useEffect(() => {
+    loadWeeklyAnalysis();
+  }, [loadWeeklyAnalysis]);
 
   useEffect(() => {
     loadMissed();
@@ -80,6 +96,16 @@ export function GroupDashboardPage() {
           </div>
         </div>
         <ActivityHeatMap days={activity?.days ?? {}} loading={loadingActivity} />
+      </section>
+
+      <section>
+        <div className="section-header">
+          <div>
+            <p className="label-caps">Weekly analysis</p>
+            <p className="section-sub">How this week stacks up against last.</p>
+          </div>
+        </div>
+        <WeeklyAnalysisPanel data={weeklyAnalysis} loading={loadingWeekly} />
       </section>
 
       {(dashboard?.pending_approvals_count ?? 0) > 0 && (
