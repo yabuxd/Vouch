@@ -98,3 +98,25 @@ export async function getGroupDashboard(groupId: string, userId: string) {
     pending_approvals_count: pendingApprovals,
   };
 }
+
+export async function getActivityHeatmap(groupId: string, userId: string) {
+  const daysBack = 84;
+  const since = new Date();
+  since.setDate(since.getDate() - daysBack + 1);
+  since.setHours(0, 0, 0, 0);
+
+  const { data: logs } = await supabase
+    .from('points_log')
+    .select('created_at')
+    .eq('group_id', groupId)
+    .eq('user_id', userId)
+    .gte('created_at', since.toISOString());
+
+  const days: Record<string, number> = {};
+  for (const log of logs ?? []) {
+    const key = log.created_at.slice(0, 10);
+    days[key] = (days[key] ?? 0) + 1;
+  }
+
+  return { days };
+}

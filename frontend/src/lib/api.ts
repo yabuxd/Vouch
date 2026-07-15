@@ -206,3 +206,7 @@ export type MissedReactionResult = {
   action: 'added' | 'updated' | 'removed';
   emoji: string | null;
 };
+
+export type ActivityHeatmap = {
+  days: Record<string, number>;
+};

@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link, useOutletContext, useParams } from 'react-router-dom';
-import { api, type Group, type GroupDashboard, type MissedFeed } from '../lib/api';
+import { api, type Group, type GroupDashboard, type MissedFeed, type ActivityHeatmap } from '../lib/api';
 import { toUserErrorMessage } from '../lib/errors';
 import { GoalCard } from '../components/GoalCard';
 import { InviteCodeBanner } from '../components/InviteCodeBanner';
 import { PlayerStatsPanel } from '../components/gamification/PlayerStatsPanel';
+import { ActivityHeatMap } from '../components/gamification/ActivityHeatMap';
 import { MissedEventCard } from '../components/gamification/MissedEventCard';
 import { ErrorState } from '../components/ErrorState';
 
@@ -12,6 +13,8 @@ export function GroupDashboardPage() {
   const { id } = useParams<{ id: string }>();
   const { group } = useOutletContext<{ group: Group | null }>();
   const [dashboard, setDashboard] = useState<GroupDashboard | null>(null);
+  const [activity, setActivity] = useState<ActivityHeatmap | null>(null);
+  const [loadingActivity, setLoadingActivity] = useState(true);
   const [missedFeed, setMissedFeed] = useState<MissedFeed | null>(null);
   const [loadingMissed, setLoadingMissed] = useState(true);
   const [error, setError] = useState<unknown>(null);
@@ -33,9 +36,22 @@ export function GroupDashboardPage() {
       .catch((err) => setError(err));
   }, [id]);
 
+  const loadActivity = useCallback(() => {
+    if (!id) return;
+    setLoadingActivity(true);
+    api<ActivityHeatmap>(`/groups/${id}/activity-heatmap`)
+      .then(setActivity)
+      .catch((err) => console.error(toUserErrorMessage(err)))
+      .finally(() => setLoadingActivity(false));
+  }, [id]);
+
   useEffect(() => {
     loadDashboard();
   }, [loadDashboard]);
+
+  useEffect(() => {
+    loadActivity();
+  }, [loadActivity]);
 
   useEffect(() => {
     loadMissed();
@@ -55,6 +71,16 @@ export function GroupDashboardPage() {
         streak={dashboard?.my_streak ?? 0}
         memberCount={memberCount}
       />
+
+      <section>
+        <div className="section-header">
+          <div>
+            <p className="label-caps">Activity</p>
+            <p className="section-sub">Vouches earned over the last 12 weeks.</p>
+          </div>
+        </div>
+        <ActivityHeatMap days={activity?.days ?? {}} loading={loadingActivity} />
+      </section>
 
       {(dashboard?.pending_approvals_count ?? 0) > 0 && (
         <Link to={`/groups/${id}/approve`} className="quest-alert block">
