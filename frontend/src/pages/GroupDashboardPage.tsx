@@ -8,6 +8,7 @@ import { PlayerStatsPanel } from '../components/gamification/PlayerStatsPanel';
 import { ActivityHeatMap } from '../components/gamification/ActivityHeatMap';
 import { WeeklyAnalysis as WeeklyAnalysisPanel } from '../components/gamification/WeeklyAnalysis';
 import { MissedEventCard } from '../components/gamification/MissedEventCard';
+import { MissedFeedSkeleton } from '../components/skeletons/PageSkeletons';
 import { ErrorState } from '../components/ErrorState';
 
 export function GroupDashboardPage() {
@@ -160,7 +161,7 @@ export function GroupDashboardPage() {
         </div>
 
         {loadingMissed ? (
-          <p className="text-sm text-ink-muted">Loading missed quests…</p>
+          <MissedFeedSkeleton />
         ) : missedFeed?.events.length ? (
           <div className="missed-list">
             {missedFeed.events.map((event) => (
