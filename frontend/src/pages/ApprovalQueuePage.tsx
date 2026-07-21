@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom';
 import { api, type Submission, type VoteResult } from '../lib/api';
 import { toUserErrorMessage } from '../lib/errors';
 import { SubmissionCard } from '../components/SubmissionCard';
-import { CelebrationToast } from '../components/gamification/CelebrationToast';
 import { ApprovalQueueSkeleton } from '../components/skeletons/PageSkeletons';
 import { ErrorState } from '../components/ErrorState';
 
@@ -14,7 +13,7 @@ export function ApprovalQueuePage() {
   const [voting, setVoting] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [actionError, setActionError] = useState('');
-  const [celebration, setCelebration] = useState<{ message: string; sub?: string } | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   const load = useCallback(() => {
     if (!id) return;
@@ -38,17 +37,13 @@ export function ApprovalQueuePage() {
       });
 
       if (result.resolved && result.approved) {
-        setCelebration({
-          message: `Proof cleared! +${result.points_awarded} pts awarded`,
-          sub: result.new_streak ? `🔥 ${result.new_streak}-day streak` : undefined,
-        });
+        setToast('Proof approved');
+      } else if (result.resolved && result.failed) {
+        setToast('Proof rejected — assignment failed');
       } else if (result.resolved && !result.approved) {
-        setCelebration({ message: 'Proof rejected — no points', sub: 'Back to the grind.' });
+        setToast('Proof rejected — one resubmit allowed');
       } else if (decision === 'approve') {
-        setCelebration({
-          message: `Vouch counted! ${result.approvals}/${result.threshold}`,
-          sub: result.approvals + 1 >= result.threshold ? undefined : 'Almost there…',
-        });
+        setToast(`Vouch counted (${result.approvals}/${result.threshold})`);
       }
 
       load();
@@ -59,19 +54,18 @@ export function ApprovalQueuePage() {
     }
   };
 
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(t);
+  }, [toast]);
+
   if (loading) return <ApprovalQueueSkeleton />;
   if (error) return <ErrorState error={error} onRetry={load} homeLink={false} />;
 
   return (
     <div>
-      {celebration && (
-        <CelebrationToast
-          message={celebration.message}
-          sub={celebration.sub}
-          onDone={() => setCelebration(null)}
-        />
-      )}
-
+      {toast && <p className="alert-success mb-6">{toast}</p>}
       {actionError && <p className="alert-error mb-6">{actionError}</p>}
 
       <div className="section-header section-header-flush">
