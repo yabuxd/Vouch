@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useOutletContext, useParams } from 'react-router-dom';
-import { api, type Goal, type GoalAssignment, type Group, type GroupDashboard } from '../lib/api';
+import { api, type Goal, type GoalAssignment, type Group, type GroupDashboard, type Submission } from '../lib/api';
 import { useAuth } from '../hooks/useAuth';
 import { TaskRow } from '../components/TaskRow';
+import { SubmissionCard } from '../components/SubmissionCard';
 import { TaskListSkeleton } from '../components/skeletons/PageSkeletons';
 import { ErrorState } from '../components/ErrorState';
 
@@ -12,6 +13,7 @@ export function TasksPage() {
   const { user } = useAuth();
   const [goals, setGoals] = useState<Goal[]>([]);
   const [assignments, setAssignments] = useState<GoalAssignment[]>([]);
+  const [history, setHistory] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<unknown>(null);
 
@@ -24,10 +26,12 @@ export function TasksPage() {
     Promise.all([
       api<Goal[]>(`/groups/${id}/goals`),
       api<GroupDashboard>(`/groups/${id}/dashboard`),
+      api<Submission[]>(`/groups/${id}/submissions/history?limit=10`),
     ])
-      .then(([goalsData, dashboard]) => {
+      .then(([goalsData, dashboard, historyData]) => {
         setGoals(goalsData);
         setAssignments(dashboard.pending_assignments);
+        setHistory(historyData);
       })
       .catch((err) => setError(err))
       .finally(() => setLoading(false));
@@ -100,6 +104,24 @@ export function TasksPage() {
           <div className="quest-list">
             {myTasks.map((goal) => (
               <TaskRow key={goal.id} goal={goal} assignment={assignmentForGoal(goal.id)} />
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section>
+        <div className="section-header">
+          <div>
+            <p className="label-caps">Completion history</p>
+            <p className="section-sub">Resolved proofs from the crew.</p>
+          </div>
+        </div>
+        {history.length === 0 ? (
+          <p className="mt-8 text-sm text-ink-muted">No completed submissions yet.</p>
+        ) : (
+          <div className="mt-8 space-y-8">
+            {history.map((s) => (
+              <SubmissionCard key={s.id} submission={s} showComments />
             ))}
           </div>
         )}

@@ -129,6 +129,43 @@ router.get('/groups/:id/submissions/pending', async (req: AuthRequest, res) => {
   }
 });
 
+router.get('/groups/:id/submissions/history', async (req: AuthRequest, res) => {
+  try {
+    const groupId = reqParam(req.params.id);
+    if (!(await isGroupMember(groupId, req.userId!))) {
+      res.status(403).json({ error: 'Not a group member' });
+      return;
+    }
+
+    const limit = Math.min(Number(req.query.limit) || 20, 50);
+
+    const { data: submissions } = await supabase
+      .from('submissions')
+      .select(`
+        *,
+        profiles(id, name, avatar_url),
+        goal_assignments(goal_id, due_date, goals(title, group_id, points_value)),
+        approvals(decision, profiles(name))
+      `)
+      .in('status', ['approved', 'rejected'])
+      .order('submitted_at', { ascending: false })
+      .limit(limit * 3);
+
+    const filtered = [];
+    for (const sub of submissions ?? []) {
+      const ga = sub.goal_assignments as { goals: { group_id: string } } | null;
+      if (ga?.goals?.group_id !== groupId) continue;
+      const signedUrl = await getSignedUrl(sub.screenshot_url);
+      filtered.push({ ...sub, screenshot_signed_url: signedUrl });
+      if (filtered.length >= limit) break;
+    }
+
+    res.json(filtered);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+});
+
 router.get('/groups/:id/submissions/mine', async (req: AuthRequest, res) => {
   try {
     const groupId = reqParam(req.params.id);
