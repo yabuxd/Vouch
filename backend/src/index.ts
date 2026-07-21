@@ -10,6 +10,10 @@ import approvalsRouter from './routes/approvals.js';
 import leaderboardRouter from './routes/leaderboard.js';
 import internalRouter from './routes/internal.js';
 import notificationsRouter from './routes/notifications.js';
+import crewsRouter from './routes/crews.js';
+import usersRouter from './routes/users.js';
+import reportsRouter from './routes/reports.js';
+import commentsRouter from './routes/comments.js';
 import { missedFeedRouter, missedEventRouter } from './routes/missed-events.js';
 
 dotenv.config();
@@ -27,6 +31,10 @@ app.get('/api/v1/health', (_req, res) => {
 app.use('/api/v1/internal', internalRouter);
 
 app.use('/api/v1/notifications', requireAuth, notificationsRouter);
+app.use('/api/v1/crews', requireAuth, crewsRouter);
+app.use('/api/v1/users', requireAuth, usersRouter);
+app.use('/api/v1/reports', requireAuth, reportsRouter);
+app.use('/api/v1/submissions', requireAuth, commentsRouter);
 app.use('/api/v1/groups', requireAuth, groupsRouter);
 app.use('/api/v1/groups/:id/goals', requireAuth, goalsRouter);
 app.use('/api/v1/groups/:id', requireAuth, leaderboardRouter);

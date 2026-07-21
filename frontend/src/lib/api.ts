@@ -104,6 +104,8 @@ export type Group = {
   owner_id: string;
   approval_threshold: number;
   weekly_reset_enabled: boolean;
+  is_discoverable?: boolean;
+  category?: string | null;
   my_role?: string;
   my_points?: number;
   my_streak?: number;
@@ -113,6 +115,61 @@ export type Group = {
     points: number;
     current_streak: number;
     profiles: { id: string; name: string; avatar_url: string | null };
+  }>;
+};
+
+export type DiscoverableCrew = {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string | null;
+  member_count: number;
+  my_join_request: 'pending' | 'approved' | 'denied' | null;
+};
+
+export type CrewJoinRequest = {
+  id: string;
+  group_id: string;
+  user_id: string;
+  status: string;
+  created_at: string;
+  profiles: { id: string; name: string; avatar_url: string | null };
+};
+
+export type SubmissionComment = {
+  id: string;
+  submission_id: string;
+  user_id: string;
+  body: string;
+  created_at: string;
+  profiles?: { id: string; name: string; avatar_url: string | null };
+};
+
+export type ReportTargetType = 'submission' | 'comment' | 'user';
+export type ReportReason = 'inappropriate' | 'spam' | 'harassment' | 'other';
+
+export type UserProfile = {
+  id: string;
+  name: string;
+  avatar_url: string | null;
+  timezone: string;
+  created_at?: string;
+};
+
+export type UserInsights = {
+  completion_rate_30d: number;
+  completion_rate_90d: number;
+  day_of_week: Array<{
+    day: string;
+    total: number;
+    missed: number;
+    miss_rate: number;
+  }>;
+  per_quest: Array<{
+    title: string;
+    total: number;
+    completed: number;
+    completion_rate: number;
   }>;
 };
 
@@ -225,7 +282,8 @@ export type NotificationType =
   | 'deadline_approaching'
   | 'vouch_needed'
   | 'quest_missed'
-  | 'submission_resolved';
+  | 'submission_resolved'
+  | 'crew_suggestion';
 
 export type NotificationItem = {
   id: string;
@@ -240,4 +298,5 @@ export type NotificationPreferences = {
   vouch_needed: boolean;
   quest_missed: boolean;
   submission_resolved: boolean;
+  crew_suggestion: boolean;
 };
