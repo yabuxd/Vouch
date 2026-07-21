@@ -10,7 +10,7 @@ const router = Router({ mergeParams: true });
 router.post('/', async (req: AuthRequest, res) => {
   try {
     const groupId = reqParam(req.params.id);
-    const { title, description, type, frequency, points_value, due_date } = req.body;
+    const { title, description, type, frequency, due_date } = req.body;
 
     if (!title?.trim() || !type || !frequency) {
       res.status(400).json({ error: 'title, type, and frequency are required' });
@@ -36,7 +36,6 @@ router.post('/', async (req: AuthRequest, res) => {
         description: description?.trim() || null,
         type,
         frequency,
-        points_value: points_value ?? 10,
         due_date: due_date || null,
       })
       .select()

@@ -101,14 +101,12 @@ router.get('/', async (req: AuthRequest, res) => {
   try {
     const { data: memberships } = await supabase
       .from('group_members')
-      .select('group_id, role, points, current_streak, groups(*)')
+      .select('group_id, role, groups(*)')
       .eq('user_id', req.userId);
 
     const groups = (memberships ?? []).map((m) => ({
       ...(m.groups as object),
       my_role: m.role,
-      my_points: m.points,
-      my_streak: m.current_streak,
     }));
 
     res.json(groups);
@@ -137,8 +135,6 @@ router.get('/:id', async (req: AuthRequest, res) => {
       ...group,
       members,
       my_role: myMembership?.role,
-      my_points: myMembership?.points ?? 0,
-      my_streak: myMembership?.current_streak ?? 0,
     });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
@@ -153,12 +149,12 @@ router.patch('/:id', async (req: AuthRequest, res) => {
       return;
     }
 
-    const { name, description, approval_threshold, weekly_reset_enabled } = req.body;
+    const { name, description, approval_threshold, auto_approve_hours } = req.body;
     const updates: Record<string, unknown> = {};
     if (name !== undefined) updates.name = name;
     if (description !== undefined) updates.description = description;
     if (approval_threshold !== undefined) updates.approval_threshold = approval_threshold;
-    if (weekly_reset_enabled !== undefined) updates.weekly_reset_enabled = weekly_reset_enabled;
+    if (auto_approve_hours !== undefined) updates.auto_approve_hours = auto_approve_hours;
 
     const { data, error } = await supabase
       .from('groups')
