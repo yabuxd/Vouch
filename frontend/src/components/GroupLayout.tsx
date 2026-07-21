@@ -19,6 +19,7 @@ import {
 import { getLevelInfo } from '../lib/gamification';
 import { StreakFlame } from './gamification/StreakFlame';
 import { XpBar } from './gamification/XpBar';
+import { NotificationBell } from './NotificationBell';
 
 const navItems = [
   { to: '', label: 'Overview', icon: <IconOverview />, end: true },
@@ -100,6 +101,9 @@ export function GroupLayout() {
               xpToNext={level.xpToNext}
               compact
             />
+          </div>
+          <div className="sidebar-notifications">
+            <NotificationBell />
           </div>
           <p className="label-caps mt-4">Navigation</p>
         </>

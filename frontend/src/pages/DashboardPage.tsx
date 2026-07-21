@@ -8,6 +8,7 @@ import { SidebarButton } from '../components/SidebarLink';
 import { IconAddCrew, IconInvite, IconSignOut } from '../components/SidebarIcons';
 import { CrewListSkeleton } from '../components/skeletons/PageSkeletons';
 import { ErrorState } from '../components/ErrorState';
+import { NotificationBell } from '../components/NotificationBell';
 import { getLevelInfo } from '../lib/gamification';
 import { LevelBadge } from '../components/gamification/LevelBadge';
 import { StreakFlame } from '../components/gamification/StreakFlame';
@@ -96,7 +97,14 @@ export function DashboardPage() {
           Vouch
         </Link>
       }
-      header={<p className="label-caps">Actions</p>}
+      header={
+        <>
+          <div className="sidebar-notifications sidebar-notifications-inline">
+            <NotificationBell />
+          </div>
+          <p className="label-caps">Actions</p>
+        </>
+      }
       nav={
         <>
           <SidebarButton icon={<IconAddCrew />} onClick={() => { setShowCreate(true); setShowJoin(false); }}>

@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase.js';
+import { notifySubmissionResolved } from './notifications/generators.js';
 
 export async function processVote(
   submissionId: string,
@@ -58,6 +59,7 @@ export async function processVote(
 
   if (approvals >= threshold) {
     const result = await finalizeApproval(submission, groupId, ga.goals.points_value, ga.goals.frequency);
+    await sendResolvedNotification(submission, groupId, true);
     return { approvals, rejections, threshold, resolved: true, approved: true, ...result };
   } else if (rejections >= threshold) {
     await supabase.from('submissions').update({ status: 'rejected' }).eq('id', submissionId);
@@ -65,6 +67,7 @@ export async function processVote(
       .from('goal_assignments')
       .update({ status: 'rejected' })
       .eq('id', submission.goal_assignment_id);
+    await sendResolvedNotification(submission, groupId, false);
     return { approvals, rejections, threshold, resolved: true, approved: false };
   }
 
@@ -107,4 +110,26 @@ async function finalizeApproval(
   });
 
   return { points_awarded: pointsValue, new_points: newPoints, new_streak: newStreak };
+}
+
+async function sendResolvedNotification(
+  submission: { id: string; user_id: string; goal_assignment_id: string },
+  groupId: string,
+  approved: boolean
+) {
+  const { data: ga } = await supabase
+    .from('goal_assignments')
+    .select('goals(title, groups(name))')
+    .eq('id', submission.goal_assignment_id)
+    .single();
+
+  const goals = ga?.goals as { title: string; groups: { name: string } } | undefined;
+  await notifySubmissionResolved(
+    submission.user_id,
+    submission.id,
+    approved,
+    goals?.title ?? 'Quest',
+    groupId,
+    goals?.groups?.name ?? 'Crew'
+  ).catch((err) => console.error('submission_resolved notification failed', err));
 }

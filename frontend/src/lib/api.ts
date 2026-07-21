@@ -220,3 +220,24 @@ export type WeeklyAnalysis = {
   best_day: { date: string; label: string; count: number } | null;
   insights: string[];
 };
+
+export type NotificationType =
+  | 'deadline_approaching'
+  | 'vouch_needed'
+  | 'quest_missed'
+  | 'submission_resolved';
+
+export type NotificationItem = {
+  id: string;
+  type: NotificationType;
+  payload: Record<string, unknown>;
+  read_at: string | null;
+  created_at: string;
+};
+
+export type NotificationPreferences = {
+  deadline_approaching: boolean;
+  vouch_needed: boolean;
+  quest_missed: boolean;
+  submission_resolved: boolean;
+};
