@@ -9,7 +9,7 @@ export function GroupSettingsPage() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [approvalThreshold, setApprovalThreshold] = useState(2);
-  const [weeklyReset, setWeeklyReset] = useState(false);
+  const [autoApproveHours, setAutoApproveHours] = useState(48);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
 
@@ -22,7 +22,7 @@ export function GroupSettingsPage() {
       setName(group.name);
       setDescription(group.description ?? '');
       setApprovalThreshold(group.approval_threshold);
-      setWeeklyReset(group.weekly_reset_enabled);
+      setAutoApproveHours(group.auto_approve_hours ?? 48);
     }
   }, [group, id, navigate]);
 
@@ -36,7 +36,7 @@ export function GroupSettingsPage() {
           name,
           description,
           approval_threshold: approvalThreshold,
-          weekly_reset_enabled: weeklyReset,
+          auto_approve_hours: autoApproveHours,
         }),
       });
       setSaved(true);
@@ -51,7 +51,7 @@ export function GroupSettingsPage() {
   return (
     <div className="max-w-lg">
       <h2 className="font-display text-2xl font-bold text-ink">Crew settings</h2>
-      <p className="mt-2 text-sm text-ink-muted">Owner only — how vouching and standings work.</p>
+      <p className="mt-2 text-sm text-ink-muted">Owner only — how vouching and auto-approval work.</p>
 
       {error && <p className="alert-error mt-6">{error}</p>}
       {saved && <p className="alert-success mt-6">Saved.</p>}
@@ -76,10 +76,21 @@ export function GroupSettingsPage() {
             className="mt-3 w-full accent-accent"
           />
         </div>
-        <label className="flex items-center gap-3 text-sm text-ink">
-          <input type="checkbox" checked={weeklyReset} onChange={(e) => setWeeklyReset(e.target.checked)} className="accent-accent" />
-          Reset standings every week
-        </label>
+        <div>
+          <label className="label-caps">Auto-approve after — {autoApproveHours}h</label>
+          <input
+            type="range"
+            min={12}
+            max={168}
+            step={12}
+            value={autoApproveHours}
+            onChange={(e) => setAutoApproveHours(Number(e.target.value))}
+            className="mt-3 w-full accent-accent"
+          />
+          <p className="mt-2 text-xs text-ink-muted">
+            Pending submissions are automatically approved if nobody votes within this window.
+          </p>
+        </div>
         <button type="submit" className="btn btn-primary">Save settings</button>
       </form>
     </div>

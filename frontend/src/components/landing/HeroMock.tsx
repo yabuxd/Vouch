@@ -10,9 +10,9 @@ export function HeroMock() {
       </div>
       <div className="landing-mock-main">
         <div className="landing-mock-stats">
-          <div><span className="landing-mock-label">Rank</span><strong>2</strong></div>
-          <div><span className="landing-mock-label">Points</span><strong className="text-accent">48</strong></div>
-          <div><span className="landing-mock-label">Streak</span><strong className="text-streak">5d</strong></div>
+          <div><span className="landing-mock-label">Due</span><strong>2</strong></div>
+          <div><span className="landing-mock-label">Pending</span><strong className="text-accent">1</strong></div>
+          <div><span className="landing-mock-label">Approved</span><strong>5</strong></div>
         </div>
         <div className="landing-mock-card">
           <div className="landing-mock-card-head">

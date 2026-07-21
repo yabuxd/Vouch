@@ -62,35 +62,6 @@ export function TaskListSkeleton() {
   );
 }
 
-export function LeaderboardSkeleton() {
-  return (
-    <div aria-busy="true" aria-label="Loading standings">
-      <div className="podium skeleton-podium" aria-hidden>
-        {[0, 1, 2].map((i) => (
-          <div key={i} className={`podium-slot skeleton-podium-slot podium-${['2nd', '1st', '3rd'][i]}`}>
-            <Skeleton className="skeleton-podium-avatar skeleton-circle" />
-            <Skeleton className="skeleton-podium-name" />
-            <Skeleton className="skeleton-podium-points" />
-          </div>
-        ))}
-      </div>
-      <ol className="standings-table skeleton-standings" aria-hidden>
-        {[0, 1, 2, 3, 4].map((i) => (
-          <li key={i} className="standings-row">
-            <Skeleton className="skeleton-rank" />
-            <Skeleton className="skeleton-standings-avatar skeleton-circle" />
-            <div className="standings-info">
-              <Skeleton className="skeleton-standings-name" />
-              <Skeleton className="skeleton-standings-meta" />
-            </div>
-            <Skeleton className="skeleton-standings-score" />
-          </li>
-        ))}
-      </ol>
-    </div>
-  );
-}
-
 export function CrewListSkeleton() {
   return (
     <ul className="crew-card-list" aria-busy="true" aria-label="Loading your crews">

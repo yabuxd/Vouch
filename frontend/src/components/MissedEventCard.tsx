@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { api, type MissedEvent } from '../../lib/api';
+import { api, type MissedEvent } from '../lib/api';
 
 const DEFAULT_EMOJIS = ['😅', '💀', '🫡', '👀', '🔥'];
 
@@ -49,17 +49,7 @@ export function MissedEventCard({ event, availableEmojis = DEFAULT_EMOJIS, onRea
             <span className="text-ink-muted"> missed </span>
             <span className="text-accent">{event.goal.title}</span>
           </p>
-          <p className="missed-card-streak">
-            {event.streak_before > 0 ? (
-              <span className="text-streak">
-                🔥 <span className="font-mono">{event.streak_before}</span>
-                <span className="text-ink-muted"> → </span>
-                <span className="font-mono text-ink-muted">0</span>
-              </span>
-            ) : (
-              <span className="text-sm text-ink-muted">Streak stays at 0 — tomorrow&apos;s another run</span>
-            )}
-          </p>
+          <p className="text-sm text-ink-muted">Tomorrow&apos;s another run.</p>
         </div>
         <time className="missed-card-time">
           {new Date(event.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}

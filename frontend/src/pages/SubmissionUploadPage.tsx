@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { api, apiUpload, type GroupDashboard } from '../lib/api';
-import { PointsReward } from '../components/gamification/PointsReward';
 
 export function SubmissionUploadPage() {
   const { id } = useParams<{ id: string }>();
@@ -29,7 +28,6 @@ export function SubmissionUploadPage() {
   }, [id, selectedId]);
 
   const selected = assignments.find((a) => a.id === selectedId);
-  const rewardPoints = selected?.goals?.points_value ?? 0;
 
   const handleFile = (f: File) => {
     setFile(f);
@@ -64,15 +62,7 @@ export function SubmissionUploadPage() {
   return (
     <div className="max-w-xl">
       <h2 className="font-display text-2xl font-bold text-ink">Send proof</h2>
-      <p className="section-sub">Snap it. Your crew vouches before the points land.</p>
-
-      {rewardPoints > 0 && (
-        <div className="reward-preview">
-          <span className="label-caps">Reward</span>
-          <PointsReward points={rewardPoints} size="lg" pulse />
-          <p className="text-xs text-ink-muted">Awarded when your crew vouches</p>
-        </div>
-      )}
+      <p className="section-sub">Snap it. Your crew vouches before it counts.</p>
 
       {error && <p className="alert-error mt-6">{error}</p>}
 
@@ -82,10 +72,14 @@ export function SubmissionUploadPage() {
           <select value={selectedId} onChange={(e) => setSelectedId(e.target.value)} className="select">
             {assignments.map((a) => (
               <option key={a.id} value={a.id}>
-                {a.goals?.title} — {a.goals?.points_value} pts — due {a.due_date}
+                {a.goals?.title} — due {a.due_date}
+                {a.status === 'rejected' ? ' (resubmit)' : ''}
               </option>
             ))}
           </select>
+          {selected?.status === 'rejected' && (
+            <p className="mt-2 text-xs text-ink-muted">This is your one allowed resubmit for this assignment.</p>
+          )}
         </div>
 
         <div
@@ -111,7 +105,7 @@ export function SubmissionUploadPage() {
         </div>
 
         <button type="submit" disabled={loading || !file || !selectedId} className="btn btn-primary btn-full">
-          {loading ? 'Uploading…' : `Submit for vouching (+${rewardPoints} pts)`}
+          {loading ? 'Uploading…' : 'Submit for vouching'}
         </button>
       </form>
     </div>

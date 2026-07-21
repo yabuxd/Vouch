@@ -1,6 +1,5 @@
 import type { Submission } from '../lib/api';
-import { PointsReward } from './gamification/PointsReward';
-import { VouchProgress } from './gamification/VouchProgress';
+import { VouchProgress } from './VouchProgress';
 
 type Props = {
   submission: Submission;
@@ -9,7 +8,6 @@ type Props = {
 };
 
 export function SubmissionCard({ submission, onVote, voting }: Props) {
-  const points = submission.goal_assignments?.goals?.points_value ?? 0;
   const approvals = submission.approval_count ?? 0;
   const rejections = submission.rejection_count ?? 0;
   const threshold = submission.approval_threshold ?? 2;
@@ -23,10 +21,6 @@ export function SubmissionCard({ submission, onVote, voting }: Props) {
             alt="Proof submitted"
             className="vouch-card-img"
           />
-          <div className="vouch-card-reward">
-            <PointsReward points={points} size="lg" pulse />
-            <p className="text-xs text-ink-muted">on the line</p>
-          </div>
         </div>
       )}
       <div className="vouch-card-body">
@@ -39,6 +33,14 @@ export function SubmissionCard({ submission, onVote, voting }: Props) {
           </time>
         </div>
         <p className="mt-1 text-sm text-accent">{submission.goal_assignments?.goals?.title}</p>
+        {submission.capture_date_flag && (
+          <p className="mt-2 inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-1 text-xs text-amber-700">
+            ⚠ Capture date mismatch
+            {submission.capture_date_note && (
+              <span className="text-ink-muted"> — {submission.capture_date_note}</span>
+            )}
+          </p>
+        )}
         {submission.note && <p className="mt-3 text-sm leading-relaxed text-ink-muted">{submission.note}</p>}
 
         {submission.status === 'pending' && (

@@ -41,18 +41,16 @@ export function TasksPage() {
   const groupTasks = goals.filter((g) => g.type === 'group');
   const myTasks = goals.filter((g) => g.type === 'individual' && g.created_by === user?.id);
 
-  const totalAvailable = assignments
-    .filter((a) => ['pending', 'rejected'].includes(a.status))
-    .reduce((sum, a) => sum + (a.goals?.points_value ?? 0), 0);
+  const actionableCount = assignments.filter((a) => ['pending', 'rejected'].includes(a.status)).length;
 
   if (loading) return <TaskListSkeleton />;
   if (error) return <ErrorState error={error} onRetry={load} homeLink={false} />;
   return (
     <div className="space-y-14">
-      {totalAvailable > 0 && (
+      {actionableCount > 0 && (
         <div className="loot-banner">
           <span className="loot-banner-icon">◎</span>
-          <span><strong>{totalAvailable} pts</strong> up for grabs right now</span>
+          <span><strong>{actionableCount} quest{actionableCount === 1 ? '' : 's'}</strong> ready for proof</span>
         </div>
       )}
 
