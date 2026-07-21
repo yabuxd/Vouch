@@ -1,0 +1,56 @@
+# Render Blueprint — Vouch API + scheduled cron jobs
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: vouch-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: CRON_SECRET
+        generateValue: true
+      - key: ADMIN_ALERT_EMAIL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: NODE_VERSION
+        value: "22"
+
+  - type: cron
+    name: vouch-daily-assignments
+    runtime: node
+    rootDir: backend
+    schedule: "0 5 * * *"
+    buildCommand: npm install
+    startCommand: node scripts/run-cron.mjs daily
+    envVars:
+      - key: API_BASE_URL
+        value: https://vouch-zwyf.onrender.com/api/v1
+      - key: CRON_SECRET
+        fromService:
+          type: web
+          name: vouch-api
+          envVarKey: CRON_SECRET
+
+  - type: cron
+    name: vouch-hourly-notifications
+    runtime: node
+    rootDir: backend
+    schedule: "0 * * * *"
+    buildCommand: npm install
+    startCommand: node scripts/run-cron.mjs hourly
+    envVars:
+      - key: API_BASE_URL
+        value: https://vouch-zwyf.onrender.com/api/v1
+      - key: CRON_SECRET
+        fromService:
+          type: web
+          name: vouch-api
+          envVarKey: CRON_SECRET

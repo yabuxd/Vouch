@@ -112,6 +112,7 @@ Invite code: `STUDYSQD`
 | GET | `/api/v1/groups/:id/leaderboard` | Leaderboard |
 | GET | `/api/v1/groups/:id/dashboard` | Personal dashboard data |
 | POST | `/api/v1/internal/generate-daily-assignments` | Cron (requires `x-cron-secret` header) |
+| POST | `/api/v1/internal/run-hourly-jobs` | Hourly cron — deadline + vouch notifications |
 
 ## Deployment
 
@@ -138,7 +139,34 @@ Schedule a daily POST to `/api/v1/internal/generate-daily-assignments` with head
 x-cron-secret: <your CRON_SECRET>
 ```
 
-Use Render Cron Jobs, Railway cron, or an external scheduler.
+Use Render Cron Jobs (see `render.yaml`), Railway cron, or an external scheduler.
+
+### Hourly Notification Cron
+
+Schedule an hourly POST to `/api/v1/internal/run-hourly-jobs` with the same `x-cron-secret` header. This runs deadline-approaching and vouch-needed notification generators.
+
+Local test:
+
+```bash
+cd backend
+CRON_SECRET=your-secret API_BASE_URL=http://localhost:3001/api/v1 node scripts/run-cron.mjs hourly
+```
+
+### Admin report alerts
+
+Set `ADMIN_ALERT_EMAIL` on the backend (Render env vars). New content reports log an alert to that address (console for now; wire Resend later).
+
+### Database migrations (005–009)
+
+From Supabase Dashboard → SQL Editor, run each file in `supabase/migrations/` in order, **or** use the apply script:
+
+```bash
+cd backend
+npm install
+DATABASE_URL="postgresql://..." npm run apply-migrations
+```
+
+Get `DATABASE_URL` from Supabase → Project Settings → Database → Connection string (URI).
 
 ## Core Flow
 
