@@ -8,10 +8,6 @@ import { SidebarButton } from '../components/SidebarLink';
 import { IconAddCrew, IconInvite, IconSignOut } from '../components/SidebarIcons';
 import { CrewListSkeleton } from '../components/skeletons/PageSkeletons';
 import { ErrorState } from '../components/ErrorState';
-import { getLevelInfo } from '../lib/gamification';
-import { LevelBadge } from '../components/gamification/LevelBadge';
-import { StreakFlame } from '../components/gamification/StreakFlame';
-import { XpBar } from '../components/gamification/XpBar';
 
 export function DashboardPage() {
   const { signOut } = useAuth();
@@ -39,10 +35,6 @@ export function DashboardPage() {
   useEffect(() => {
     loadGroups();
   }, [loadGroups]);
-
-  const totalPoints = groups.reduce((sum, g) => sum + (g.my_points ?? 0), 0);
-  const bestStreak = Math.max(0, ...groups.map((g) => g.my_streak ?? 0));
-  const globalLevel = getLevelInfo(totalPoints);
 
   const createGroup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,22 +105,6 @@ export function DashboardPage() {
         </SidebarButton>
       }
     >
-      {groups.length > 0 && (
-        <div className="global-player-card">
-          <LevelBadge level={globalLevel.level} title={globalLevel.title} size="md" />
-          <div className="global-player-stats">
-            <span className="font-mono text-accent font-medium">{totalPoints} pts</span>
-            {bestStreak > 0 && <StreakFlame streak={bestStreak} size="sm" />}
-          </div>
-          <XpBar
-            progress={globalLevel.progress}
-            xpInLevel={globalLevel.xpInLevel}
-            xpToNext={globalLevel.xpToNext}
-            compact
-          />
-        </div>
-      )}
-
       {error && <p className="alert-error mb-6">{error}</p>}
 
       {showCreate && (
@@ -161,28 +137,19 @@ export function DashboardPage() {
         </p>
       ) : (
         <ul className="crew-card-list">
-          {groups.map((g) => {
-            const level = getLevelInfo(g.my_points ?? 0);
-            return (
-              <li key={g.id}>
-                <Link to={`/groups/${g.id}`} className="crew-card">
-                  <div className="crew-card-main">
-                    <h3 className="font-display text-lg font-semibold text-ink">{g.name}</h3>
-                    {g.description && <p className="crew-card-desc">{g.description}</p>}
-                    <div className="crew-card-meta">
-                      <LevelBadge level={level.level} size="sm" />
-                      <span className="text-xs text-ink-muted">{g.my_role}</span>
-                    </div>
+          {groups.map((g) => (
+            <li key={g.id}>
+              <Link to={`/groups/${g.id}`} className="crew-card">
+                <div className="crew-card-main">
+                  <h3 className="font-display text-lg font-semibold text-ink">{g.name}</h3>
+                  {g.description && <p className="crew-card-desc">{g.description}</p>}
+                  <div className="crew-card-meta">
+                    <span className="text-xs text-ink-muted">{g.my_role}</span>
                   </div>
-                  <div className="crew-card-score">
-                    <p className="font-mono text-lg font-medium text-accent">{g.my_points ?? 0}</p>
-                    <p className="text-xs text-ink-muted">pts</p>
-                    {(g.my_streak ?? 0) > 0 && <StreakFlame streak={g.my_streak!} size="sm" />}
-                  </div>
-                </Link>
-              </li>
-            );
-          })}
+                </div>
+              </Link>
+            </li>
+          ))}
         </ul>
       )}
     </SidebarShell>

@@ -15,7 +15,6 @@ import { GoalCreationPage } from './pages/GoalCreationPage';
 import { TasksPage } from './pages/TasksPage';
 import { SubmissionUploadPage } from './pages/SubmissionUploadPage';
 import { ApprovalQueuePage } from './pages/ApprovalQueuePage';
-import { LeaderboardPage } from './pages/LeaderboardPage';
 import { LandingPage } from './pages/LandingPage';
 import { JoinPage } from './pages/JoinPage';
 import { NotFoundPage } from './pages/NotFoundPage';
@@ -70,7 +69,6 @@ export default function App() {
               <Route path="goals/new" element={<GoalCreationPage />} />
               <Route path="submit" element={<SubmissionUploadPage />} />
               <Route path="approve" element={<ApprovalQueuePage />} />
-              <Route path="leaderboard" element={<LeaderboardPage />} />
             </Route>
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
