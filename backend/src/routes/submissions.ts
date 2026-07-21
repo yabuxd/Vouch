@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { supabase } from '../lib/supabase.js';
-import { getGroupIdFromAssignment, isGroupMember, reqParam } from '../lib/helpers.js';
+import { isGroupMember, reqParam } from '../lib/helpers.js';
 import { uploadProof, getSignedUrl } from '../services/storage.js';
+import { checkCaptureDate } from '../services/image-metadata.js';
 import type { AuthRequest } from '../middleware/auth.js';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
@@ -29,6 +30,11 @@ router.post('/assignments/:id/submit', upload.single('screenshot'), async (req: 
       return;
     }
 
+    if (assignment.status === 'failed') {
+      res.status(400).json({ error: 'Assignment failed — no more resubmissions allowed' });
+      return;
+    }
+
     if (!['pending', 'rejected'].includes(assignment.status)) {
       res.status(400).json({ error: 'Assignment already submitted or approved' });
       return;
@@ -41,6 +47,8 @@ router.post('/assignments/:id/submit', upload.single('screenshot'), async (req: 
 
     const goals = assignment.goals as { group_id: string };
     const path = await uploadProof(goals.group_id, req.userId!, req.file);
+    const captureCheck = await checkCaptureDate(req.file.buffer, assignment.due_date);
+    const submitCount = (assignment.submit_count ?? 0) + 1;
 
     const { data: submission, error } = await supabase
       .from('submissions')
@@ -50,6 +58,8 @@ router.post('/assignments/:id/submit', upload.single('screenshot'), async (req: 
         screenshot_url: path,
         note: note?.trim() || null,
         status: 'pending',
+        capture_date_flag: captureCheck.flagged,
+        capture_date_note: captureCheck.note,
       })
       .select()
       .single();
@@ -61,7 +71,7 @@ router.post('/assignments/:id/submit', upload.single('screenshot'), async (req: 
 
     await supabase
       .from('goal_assignments')
-      .update({ status: 'submitted' })
+      .update({ status: 'submitted', submit_count: submitCount })
       .eq('id', assignmentId);
 
     const signedUrl = await getSignedUrl(path);
@@ -92,7 +102,7 @@ router.get('/groups/:id/submissions/pending', async (req: AuthRequest, res) => {
       .select(`
         *,
         profiles(id, name, avatar_url),
-        goal_assignments(goal_id, goals(title, group_id, points_value)),
+        goal_assignments(goal_id, due_date, goals(title, group_id)),
         approvals(decision, approver_id)
       `)
       .eq('status', 'pending')
@@ -101,7 +111,7 @@ router.get('/groups/:id/submissions/pending', async (req: AuthRequest, res) => {
 
     const filtered = [];
     for (const sub of submissions ?? []) {
-      const ga = sub.goal_assignments as { goals: { group_id: string; title: string } } | null;
+      const ga = sub.goal_assignments as { goals: { group_id: string; title: string }; due_date: string } | null;
       if (ga?.goals?.group_id !== groupId) continue;
 
       const alreadyVoted = (sub.approvals as Array<{ approver_id: string; decision: string }> ?? []).some(
