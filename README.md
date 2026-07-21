@@ -109,8 +109,7 @@ Invite code: `STUDYSQD`
 | POST | `/api/v1/assignments/:id/submit` | Upload proof |
 | GET | `/api/v1/groups/:id/submissions/pending` | Approval queue |
 | POST | `/api/v1/submissions/:id/vote` | Approve/reject |
-| GET | `/api/v1/groups/:id/leaderboard` | Leaderboard |
-| GET | `/api/v1/groups/:id/dashboard` | Personal dashboard data |
+| GET | `/api/v1/groups/:id/dashboard` | Personal dashboard data (pending quests & vouch queue count) |
 | POST | `/api/v1/internal/generate-daily-assignments` | Cron (requires `x-cron-secret` header) |
 | POST | `/api/v1/internal/run-hourly-jobs` | Hourly cron — deadline + vouch notifications |
 
@@ -175,8 +174,7 @@ Get `DATABASE_URL` from Supabase → Project Settings → Database → Connectio
 3. Owner sets group goals; members set individual goals
 4. Submit screenshot proof for daily/weekly assignments
 5. Other members approve or reject (threshold configurable per group)
-6. Approved submissions award points and update streaks
-7. Leaderboard ranks members by points
+6. Approved submissions mark the quest complete
 
 ## License
 

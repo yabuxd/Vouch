@@ -9,7 +9,7 @@ export async function processVote(
 ) {
   const { data: submission, error: subErr } = await supabase
     .from('submissions')
-    .select('*, goal_assignments(goal_id, goals(group_id, points_value, frequency))')
+    .select('*, goal_assignments(goal_id, goals(group_id, frequency))')
     .eq('id', submissionId)
     .single();
 
@@ -37,7 +37,7 @@ export async function processVote(
 
   const ga = submission.goal_assignments as unknown as {
     goal_id: string;
-    goals: { group_id: string; points_value: number; frequency: string };
+    goals: { group_id: string; frequency: string };
   };
   const groupId = ga.goals.group_id;
 
@@ -58,10 +58,12 @@ export async function processVote(
   const rejections = (votes ?? []).filter((v) => v.decision === 'reject').length;
 
   if (approvals >= threshold) {
-    const result = await finalizeApproval(submission, groupId, ga.goals.points_value, ga.goals.frequency);
+    await finalizeApproval(submission);
     await sendResolvedNotification(submission, groupId, true);
-    return { approvals, rejections, threshold, resolved: true, approved: true, ...result };
-  } else if (rejections >= threshold) {
+    return { approvals, rejections, threshold, resolved: true, approved: true };
+  }
+
+  if (rejections >= threshold) {
     await supabase.from('submissions').update({ status: 'rejected' }).eq('id', submissionId);
     await supabase
       .from('goal_assignments')
@@ -74,42 +76,15 @@ export async function processVote(
   return { approvals, rejections, threshold, resolved: false };
 }
 
-async function finalizeApproval(
-  submission: { id: string; user_id: string; goal_assignment_id: string },
-  groupId: string,
-  pointsValue: number,
-  frequency: string
-) {
+async function finalizeApproval(submission: {
+  id: string;
+  goal_assignment_id: string;
+}) {
   await supabase.from('submissions').update({ status: 'approved' }).eq('id', submission.id);
   await supabase
     .from('goal_assignments')
     .update({ status: 'approved' })
     .eq('id', submission.goal_assignment_id);
-
-  const { data: member } = await supabase
-    .from('group_members')
-    .select('points, current_streak')
-    .eq('group_id', groupId)
-    .eq('user_id', submission.user_id)
-    .single();
-
-  const newPoints = (member?.points ?? 0) + pointsValue;
-  const newStreak = frequency === 'daily' ? (member?.current_streak ?? 0) + 1 : (member?.current_streak ?? 0);
-
-  await supabase
-    .from('group_members')
-    .update({ points: newPoints, current_streak: newStreak })
-    .eq('group_id', groupId)
-    .eq('user_id', submission.user_id);
-
-  await supabase.from('points_log').insert({
-    user_id: submission.user_id,
-    group_id: groupId,
-    submission_id: submission.id,
-    points: pointsValue,
-  });
-
-  return { points_awarded: pointsValue, new_points: newPoints, new_streak: newStreak };
 }
 
 async function sendResolvedNotification(

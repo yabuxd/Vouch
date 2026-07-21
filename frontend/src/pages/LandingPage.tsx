@@ -5,7 +5,6 @@ import {
   IconTasks,
   IconProof,
   IconVouch,
-  IconStandings,
   IconAddCrew,
   IconSettings,
 } from '../components/SidebarIcons';
@@ -15,7 +14,7 @@ const steps = [
   { num: '02', title: 'Get your tasks', body: 'The owner sets crew-wide tasks. You set personal ones. Daily, weekly, or one-time — whatever fits the grind.' },
   { num: '03', title: 'Send proof', body: 'Done? Snap a screenshot. No honor system. Your crew sees what you actually did.' },
   { num: '04', title: 'Get vouched', body: 'Crew members vouch or reject. Hit the threshold and it counts. Miss it, and it doesn\'t.' },
-  { num: '05', title: 'Climb the standings', body: 'Points stack. Streaks grow. You\'ll know exactly where you rank — and so will everyone else.' },
+  { num: '05', title: 'Stay accountable', body: 'See what\'s due, what needs your vouch, and how your crew is doing — without points or rankings.' },
 ];
 
 const features = [
@@ -40,14 +39,9 @@ const features = [
     body: 'Your crew vouches or rejects each submission. Set how many vouches it takes before proof counts. Democracy, but for homework.',
   },
   {
-    icon: <IconStandings />,
-    title: 'Standings & streaks',
-    body: 'Points for vouched proof. Streaks for consistency. A crew standings board that updates as people actually deliver.',
-  },
-  {
     icon: <IconOverview />,
-    title: 'Your dashboard',
-    body: 'See your rank, points, what\'s due now, and how many proofs need your vouch — all in one place.',
+    title: 'Crew overview',
+    body: 'See active quests, pending proofs, and what needs your vouch — all in one place.',
   },
 ];
 
@@ -60,7 +54,7 @@ const faqs = [
 const testimonials = [
   { quote: 'We finally stopped saying "I\'ll study later." Screenshots don\'t lie, and neither do we.', role: 'Sample quote — study crew of 4' },
   { quote: 'It\'s like having a gym buddy, but for everything you keep putting off.', role: 'Sample quote — morning routine crew' },
-  { quote: 'The standings are petty. That\'s why it works.', role: 'Sample quote — roommate accountability crew' },
+  { quote: 'Knowing someone will vouch your proof changes how you show up.', role: 'Sample quote — roommate accountability crew' },
 ];
 
 function scrollTo(id: string) {
@@ -93,8 +87,7 @@ export function LandingPage() {
               Say you&apos;ll do it.<br />Then prove it.
             </h1>
             <p className="landing-hero-sub">
-              Vouch is where proof plus crew approval turns completed tasks into points and standings.
-              Finish a task, send proof, get vouched — that&apos;s the loop.
+              Vouch is peer accountability for crews. Finish a task, send proof, get vouched — that&apos;s the loop.
             </p>
             <div className="landing-hero-ctas">
               <Link to="/signup" className="btn btn-accent">Start a crew</Link>
@@ -171,10 +164,10 @@ export function LandingPage() {
           <div className="landing-roadmap-icon" aria-hidden><IconSettings /></div>
           <div>
             <p className="label-caps">What&apos;s next</p>
-            <h2 className="landing-section-title font-display">More ways to compete — eventually</h2>
+            <h2 className="landing-section-title font-display">Built for accountability, not competition</h2>
             <p className="landing-roadmap-body">
-              Badges for streak milestones and crew-vs-crew standings are on the horizon.
-              For now, we&apos;re focused on nailing the core loop: task, proof, vouch, standings.
+              Crew discovery, personal insights, and smarter notifications are rolling out.
+              The core stays the same: task, proof, vouch.
             </p>
           </div>
         </div>
@@ -209,7 +202,7 @@ export function LandingPage() {
         <div className="landing-container landing-footer-inner">
           <div>
             <p className="landing-logo font-display">Vouch</p>
-            <p className="landing-footer-tagline">Proof + crew approval = points that count.</p>
+            <p className="landing-footer-tagline">Proof + crew approval = accountability that sticks.</p>
           </div>
           <nav className="landing-footer-nav" aria-label="Footer">
             <button type="button" onClick={() => scrollTo('how-it-works')}>How it works</button>

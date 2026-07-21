@@ -1,6 +1,5 @@
 import type { GoalAssignment } from '../lib/api';
 import { Link, useParams } from 'react-router-dom';
-import { PointsReward } from './gamification/PointsReward';
 
 const statusBadge: Record<string, string> = {
   pending: 'badge-pending',
@@ -26,10 +25,7 @@ export function GoalCard({ assignment }: { assignment: GoalAssignment }) {
   return (
     <div className={`quest-card${isActionable ? ' quest-card-active' : ''}`}>
       <div className="quest-card-body">
-        <div className="quest-card-top">
-          <h3 className="font-display text-lg font-semibold text-ink">{goal.title}</h3>
-          <PointsReward points={goal.points_value} size="md" pulse={isActionable} />
-        </div>
+        <h3 className="font-display text-lg font-semibold text-ink">{goal.title}</h3>
         {goal.description && <p className="mt-1 text-sm text-ink-muted">{goal.description}</p>}
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className={`badge ${goal.type === 'group' ? 'badge-group' : 'badge-personal'}`}>

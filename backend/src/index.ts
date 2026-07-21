@@ -7,14 +7,13 @@ import goalsRouter from './routes/goals.js';
 import assignmentsRouter from './routes/assignments.js';
 import submissionsRouter from './routes/submissions.js';
 import approvalsRouter from './routes/approvals.js';
-import leaderboardRouter from './routes/leaderboard.js';
+import dashboardRouter from './routes/dashboard.js';
 import internalRouter from './routes/internal.js';
 import notificationsRouter from './routes/notifications.js';
 import crewsRouter from './routes/crews.js';
 import usersRouter from './routes/users.js';
 import reportsRouter from './routes/reports.js';
 import commentsRouter from './routes/comments.js';
-import { missedFeedRouter, missedEventRouter } from './routes/missed-events.js';
 
 dotenv.config();
 
@@ -37,9 +36,7 @@ app.use('/api/v1/reports', requireAuth, reportsRouter);
 app.use('/api/v1/submissions', requireAuth, commentsRouter);
 app.use('/api/v1/groups', requireAuth, groupsRouter);
 app.use('/api/v1/groups/:id/goals', requireAuth, goalsRouter);
-app.use('/api/v1/groups/:id', requireAuth, leaderboardRouter);
-app.use('/api/v1/groups/:id', requireAuth, missedFeedRouter);
-app.use('/api/v1/missed-events', requireAuth, missedEventRouter);
+app.use('/api/v1/groups/:id', requireAuth, dashboardRouter);
 app.use('/api/v1/goals', requireAuth, assignmentsRouter);
 app.use('/api/v1', requireAuth, submissionsRouter);
 app.use('/api/v1/submissions', requireAuth, approvalsRouter);

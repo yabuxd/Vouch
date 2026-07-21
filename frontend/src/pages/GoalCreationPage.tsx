@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useOutletContext, useParams, useSearchParams } from 'react-router-dom';
 import { api, type Group } from '../lib/api';
-import { PointsReward } from '../components/gamification/PointsReward';
 
 export function GoalCreationPage() {
   const { id } = useParams<{ id: string }>();
@@ -15,7 +14,6 @@ export function GoalCreationPage() {
   const [description, setDescription] = useState('');
   const [type, setType] = useState<'group' | 'individual'>(initialType);
   const [frequency, setFrequency] = useState<'daily' | 'weekly' | 'one_time'>('daily');
-  const [pointsValue, setPointsValue] = useState(10);
   const [dueDate, setDueDate] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,7 +39,6 @@ export function GoalCreationPage() {
           description,
           type,
           frequency,
-          points_value: pointsValue,
           due_date: frequency === 'one_time' ? dueDate : undefined,
         }),
       });
@@ -57,7 +54,7 @@ export function GoalCreationPage() {
     <div className="max-w-lg">
       <Link to={`/groups/${id}/tasks`} className="text-sm text-ink-muted hover:text-accent">← Back to quests</Link>
       <h2 className="mt-6 font-display text-2xl font-bold text-ink">Create a quest</h2>
-      <p className="section-sub">Set the challenge. Set the reward.</p>
+      <p className="section-sub">Set the challenge for yourself or the crew.</p>
 
       {error && <p className="alert-error mt-6">{error}</p>}
 
@@ -106,16 +103,8 @@ export function GoalCreationPage() {
             <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} required className="input" />
           </div>
         )}
-        <div>
-          <label className="label-caps">Point reward</label>
-          <div className="flex items-center gap-4 mt-2">
-            <input type="range" min={5} max={50} step={5} value={pointsValue} onChange={(e) => setPointsValue(Number(e.target.value))} className="reward-slider flex-1" />
-            <PointsReward points={pointsValue} size="lg" pulse />
-          </div>
-          <p className="mt-2 text-xs text-ink-muted">Awarded when the crew vouches the proof</p>
-        </div>
         <button type="submit" disabled={loading} className="btn btn-primary btn-full">
-          {loading ? 'Creating…' : `Launch ${type === 'group' ? 'crew' : 'solo'} quest (+${pointsValue} pts)`}
+          {loading ? 'Creating…' : `Launch ${type === 'group' ? 'crew' : 'solo'} quest`}
         </button>
       </form>
     </div>

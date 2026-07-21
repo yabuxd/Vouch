@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { generateDailyAssignments, resetMissedStreaks } from '../services/assignments.js';
+import { generateDailyAssignments, processMissedAssignments } from '../services/assignments.js';
 import { requireCronSecret } from '../middleware/auth.js';
 import {
   generateDeadlineApproachingNotifications,
@@ -11,10 +11,10 @@ const router = Router();
 
 router.post('/generate-daily-assignments', requireCronSecret, async (_req, res) => {
   try {
-    const missedEvents = await resetMissedStreaks();
+    const missed = await processMissedAssignments();
     const created = await generateDailyAssignments();
     const cold_start = await runColdStartMatching();
-    res.json({ created, missed_events: missedEvents, cold_start });
+    res.json({ created, missed_assignments: missed, cold_start });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }

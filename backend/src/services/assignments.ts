@@ -103,7 +103,7 @@ export async function generateDailyAssignments(): Promise<number> {
   return created;
 }
 
-export async function resetMissedStreaks(): Promise<number> {
+export async function processMissedAssignments(): Promise<number> {
   const { data: candidates } = await supabase
     .from('goal_assignments')
     .select('id, user_id, goal_id, due_date, goals!inner(group_id, frequency, is_active)')
@@ -123,7 +123,6 @@ export async function resetMissedStreaks(): Promise<number> {
 
   if (!missed.length) return 0;
 
-  let eventsCreated = 0;
   const missesByGroup = new Map<
     string,
     { groupName: string; misses: Array<{ member_name: string; goal_title: string; goal_assignment_id: string }> }
@@ -134,65 +133,36 @@ export async function resetMissedStreaks(): Promise<number> {
       group_id: string;
       frequency: string;
       is_active: boolean;
-      title?: string;
-      groups?: { name: string };
     };
 
-    const { data: membership } = await supabase
-      .from('group_members')
-      .select('current_streak')
-      .eq('user_id', assignment.user_id)
-      .eq('group_id', goal.group_id)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('name')
+      .eq('id', assignment.user_id)
       .single();
 
-    const streakBefore = membership?.current_streak ?? 0;
+    const { data: goalRow } = await supabase
+      .from('goals')
+      .select('title')
+      .eq('id', assignment.goal_id)
+      .single();
 
-    const { error: insertError } = await supabase.from('missed_events').insert({
-      group_id: goal.group_id,
-      member_id: assignment.user_id,
-      goal_id: assignment.goal_id,
+    const { data: groupRow } = await supabase
+      .from('groups')
+      .select('name')
+      .eq('id', goal.group_id)
+      .single();
+
+    const bucket = missesByGroup.get(goal.group_id) ?? {
+      groupName: groupRow?.name ?? 'Crew',
+      misses: [] as Array<{ member_name: string; goal_title: string; goal_assignment_id: string }>,
+    };
+    bucket.misses.push({
+      member_name: profile?.name ?? 'Member',
+      goal_title: goalRow?.title ?? 'Quest',
       goal_assignment_id: assignment.id,
-      streak_before: streakBefore,
     });
-
-    if (!insertError) {
-      eventsCreated++;
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('name')
-        .eq('id', assignment.user_id)
-        .single();
-
-      const { data: goalRow } = await supabase
-        .from('goals')
-        .select('title')
-        .eq('id', assignment.goal_id)
-        .single();
-
-      const { data: groupRow } = await supabase
-        .from('groups')
-        .select('name')
-        .eq('id', goal.group_id)
-        .single();
-
-      const bucket = missesByGroup.get(goal.group_id) ?? {
-        groupName: groupRow?.name ?? 'Crew',
-        misses: [] as Array<{ member_name: string; goal_title: string; goal_assignment_id: string }>,
-      };
-      bucket.misses.push({
-        member_name: profile?.name ?? 'Member',
-        goal_title: goalRow?.title ?? 'Quest',
-        goal_assignment_id: assignment.id,
-      });
-      missesByGroup.set(goal.group_id, bucket);
-    }
-
-    await supabase
-      .from('group_members')
-      .update({ current_streak: 0 })
-      .eq('user_id', assignment.user_id)
-      .eq('group_id', goal.group_id);
+    missesByGroup.set(goal.group_id, bucket);
   }
 
   for (const [groupId, { groupName, misses }] of missesByGroup) {
@@ -201,5 +171,5 @@ export async function resetMissedStreaks(): Promise<number> {
     );
   }
 
-  return eventsCreated;
+  return missed.length;
 }

@@ -1,6 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
 import type { Goal, GoalAssignment } from '../lib/api';
-import { PointsReward } from './gamification/PointsReward';
 
 const statusBadge: Record<string, string> = {
   pending: 'badge-pending',
@@ -25,14 +24,11 @@ export function TaskRow({ goal, assignment }: Props) {
   return (
     <div className={`quest-card quest-card-row${isActionable ? ' quest-card-active' : ''}`}>
       <div className="quest-card-body">
-        <div className="quest-card-top">
-          <div className="flex flex-wrap items-center gap-2">
-            <h3 className="font-display text-lg font-semibold text-ink">{goal.title}</h3>
-            <span className={`badge ${goal.type === 'group' ? 'badge-group' : 'badge-personal'}`}>
-              {goal.type === 'group' ? 'Crew' : 'Solo'}
-            </span>
-          </div>
-          <PointsReward points={goal.points_value} size="sm" pulse={!!isActionable} />
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="font-display text-lg font-semibold text-ink">{goal.title}</h3>
+          <span className={`badge ${goal.type === 'group' ? 'badge-group' : 'badge-personal'}`}>
+            {goal.type === 'group' ? 'Crew' : 'Solo'}
+          </span>
         </div>
         {goal.description && <p className="mt-1 text-sm text-ink-muted">{goal.description}</p>}
         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-muted">

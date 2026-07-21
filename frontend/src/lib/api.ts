@@ -103,17 +103,12 @@ export type Group = {
   invite_code: string;
   owner_id: string;
   approval_threshold: number;
-  weekly_reset_enabled: boolean;
   is_discoverable?: boolean;
   category?: string | null;
   my_role?: string;
-  my_points?: number;
-  my_streak?: number;
   members?: Array<{
     user_id: string;
     role: string;
-    points: number;
-    current_streak: number;
     profiles: { id: string; name: string; avatar_url: string | null };
   }>;
 };
@@ -181,7 +176,6 @@ export type Goal = {
   description: string | null;
   type: 'group' | 'individual';
   frequency: 'daily' | 'weekly' | 'one_time';
-  points_value: number;
   due_date: string | null;
 };
 
@@ -206,7 +200,7 @@ export type Submission = {
   rejection_count?: number;
   approval_threshold?: number;
   profiles?: { id: string; name: string };
-  goal_assignments?: { goals: { title: string; points_value?: number } };
+  goal_assignments?: { goals: { title: string } };
   approvals?: Array<{ decision: string; profiles?: { name: string } }>;
 };
 
@@ -216,66 +210,11 @@ export type VoteResult = {
   threshold: number;
   resolved: boolean;
   approved?: boolean;
-  points_awarded?: number;
-  new_points?: number;
-  new_streak?: number;
-};
-
-export type LeaderboardEntry = {
-  rank: number;
-  user_id: string;
-  points: number;
-  current_streak: number;
-  role: string;
-  profile: { id: string; name: string; avatar_url: string | null };
 };
 
 export type GroupDashboard = {
-  my_rank: number | null;
-  my_points: number;
-  my_streak: number;
   pending_assignments: GoalAssignment[];
   pending_approvals_count: number;
-};
-
-export type MissedEvent = {
-  id: string;
-  group_id: string;
-  member_id: string;
-  goal_id: string;
-  goal_assignment_id: string;
-  streak_before: number;
-  created_at: string;
-  member: { id: string; name: string; avatar_url: string | null };
-  goal: { id: string; title: string };
-  reaction_counts: Array<{ emoji: string; count: number }>;
-  my_reaction: string | null;
-};
-
-export type MissedFeed = {
-  events: MissedEvent[];
-  total: number;
-  has_more: boolean;
-  available_emojis: string[];
-};
-
-export type MissedReactionResult = {
-  action: 'added' | 'updated' | 'removed';
-  emoji: string | null;
-};
-
-export type ActivityHeatmap = {
-  days: Record<string, number>;
-};
-
-export type WeeklyAnalysis = {
-  this_week: { points: number; completions: number };
-  last_week: { points: number; completions: number };
-  streak: number;
-  points_change_pct: number | null;
-  completions_change: number;
-  best_day: { date: string; label: string; count: number } | null;
-  insights: string[];
 };
 
 export type NotificationType =

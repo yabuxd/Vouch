@@ -3,7 +3,6 @@ import { useParams } from 'react-router-dom';
 import { api, type Submission, type VoteResult } from '../lib/api';
 import { toUserErrorMessage } from '../lib/errors';
 import { SubmissionCard } from '../components/SubmissionCard';
-import { CelebrationToast } from '../components/gamification/CelebrationToast';
 import { ApprovalQueueSkeleton } from '../components/skeletons/PageSkeletons';
 import { ErrorState } from '../components/ErrorState';
 
@@ -14,7 +13,6 @@ export function ApprovalQueuePage() {
   const [voting, setVoting] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [actionError, setActionError] = useState('');
-  const [celebration, setCelebration] = useState<{ message: string; sub?: string } | null>(null);
 
   const load = useCallback(() => {
     if (!id) return;
@@ -32,25 +30,10 @@ export function ApprovalQueuePage() {
     setVoting(true);
     setActionError('');
     try {
-      const result = await api<VoteResult>(`/submissions/${submissionId}/vote`, {
+      await api<VoteResult>(`/submissions/${submissionId}/vote`, {
         method: 'POST',
         body: JSON.stringify({ decision }),
       });
-
-      if (result.resolved && result.approved) {
-        setCelebration({
-          message: `Proof cleared! +${result.points_awarded} pts awarded`,
-          sub: result.new_streak ? `🔥 ${result.new_streak}-day streak` : undefined,
-        });
-      } else if (result.resolved && !result.approved) {
-        setCelebration({ message: 'Proof rejected — no points', sub: 'Back to the grind.' });
-      } else if (decision === 'approve') {
-        setCelebration({
-          message: `Vouch counted! ${result.approvals}/${result.threshold}`,
-          sub: result.approvals + 1 >= result.threshold ? undefined : 'Almost there…',
-        });
-      }
-
       load();
     } catch (err) {
       setActionError(toUserErrorMessage(err));
@@ -64,14 +47,6 @@ export function ApprovalQueuePage() {
 
   return (
     <div>
-      {celebration && (
-        <CelebrationToast
-          message={celebration.message}
-          sub={celebration.sub}
-          onDone={() => setCelebration(null)}
-        />
-      )}
-
       {actionError && <p className="alert-error mb-6">{actionError}</p>}
 
       <div className="section-header section-header-flush">

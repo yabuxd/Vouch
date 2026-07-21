@@ -12,13 +12,9 @@ import {
   IconTasks,
   IconProof,
   IconVouch,
-  IconStandings,
   IconSettings,
   IconSignOut,
 } from './SidebarIcons';
-import { getLevelInfo } from '../lib/gamification';
-import { StreakFlame } from './gamification/StreakFlame';
-import { XpBar } from './gamification/XpBar';
 import { NotificationBell } from './NotificationBell';
 
 const navItems = [
@@ -26,7 +22,6 @@ const navItems = [
   { to: 'tasks', label: 'Quests', icon: <IconTasks /> },
   { to: 'submit', label: 'Send proof', icon: <IconProof /> },
   { to: 'approve', label: 'Vouch', icon: <IconVouch /> },
-  { to: 'leaderboard', label: 'Standings', icon: <IconStandings /> },
   { to: 'settings', label: 'Settings', icon: <IconSettings /> },
 ];
 
@@ -67,10 +62,6 @@ export function GroupLayout() {
     );
   }
 
-  const links = navItems;
-
-  const level = getLevelInfo(group.my_points ?? 0);
-
   return (
     <SidebarShell
       title={group.name}
@@ -87,19 +78,6 @@ export function GroupLayout() {
           <p className="mt-3 font-display text-lg font-semibold leading-tight text-ink">
             {group.name}
           </p>
-          <div className="sidebar-player-card">
-            <div className="sidebar-player-top">
-              <span className="sidebar-player-level">Lv.{level.level}</span>
-              <span className="font-mono text-sm text-accent">{group.my_points ?? 0} pts</span>
-            </div>
-            {(group.my_streak ?? 0) > 0 && <StreakFlame streak={group.my_streak!} size="sm" />}
-            <XpBar
-              progress={level.progress}
-              xpInLevel={level.xpInLevel}
-              xpToNext={level.xpToNext}
-              compact
-            />
-          </div>
           <div className="sidebar-notifications">
             <NotificationBell />
           </div>
@@ -108,7 +86,7 @@ export function GroupLayout() {
       }
       nav={
         <>
-          {links.map((item) => (
+          {navItems.map((item) => (
             <SidebarLink
               key={item.to}
               to={item.to ? `/groups/${id}/${item.to}` : `/groups/${id}`}

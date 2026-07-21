@@ -92,7 +92,7 @@ router.get('/groups/:id/submissions/pending', async (req: AuthRequest, res) => {
       .select(`
         *,
         profiles(id, name, avatar_url),
-        goal_assignments(goal_id, goals(title, group_id, points_value)),
+        goal_assignments(goal_id, goals(title, group_id)),
         approvals(decision, approver_id)
       `)
       .eq('status', 'pending')
@@ -144,7 +144,7 @@ router.get('/groups/:id/submissions/history', async (req: AuthRequest, res) => {
       .select(`
         *,
         profiles(id, name, avatar_url),
-        goal_assignments(goal_id, due_date, goals(title, group_id, points_value)),
+        goal_assignments(goal_id, due_date, goals(title, group_id)),
         approvals(decision, profiles(name))
       `)
       .in('status', ['approved', 'rejected'])

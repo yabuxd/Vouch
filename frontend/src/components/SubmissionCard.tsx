@@ -1,6 +1,5 @@
 import type { Submission } from '../lib/api';
-import { PointsReward } from './gamification/PointsReward';
-import { VouchProgress } from './gamification/VouchProgress';
+import { VouchProgress } from './VouchProgress';
 import { SubmissionComments } from './SubmissionComments';
 import { FlagContentButton } from './FlagContentButton';
 
@@ -12,7 +11,6 @@ type Props = {
 };
 
 export function SubmissionCard({ submission, onVote, voting, showComments = true }: Props) {
-  const points = submission.goal_assignments?.goals?.points_value ?? 0;
   const approvals = submission.approval_count ?? 0;
   const rejections = submission.rejection_count ?? 0;
   const threshold = submission.approval_threshold ?? 2;
@@ -26,10 +24,6 @@ export function SubmissionCard({ submission, onVote, voting, showComments = true
             alt="Proof submitted"
             className="vouch-card-img"
           />
-          <div className="vouch-card-reward">
-            <PointsReward points={points} size="lg" pulse />
-            <p className="text-xs text-ink-muted">on the line</p>
-          </div>
         </div>
       )}
       <div className="vouch-card-body">

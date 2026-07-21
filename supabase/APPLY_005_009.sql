@@ -181,3 +181,16 @@ create policy "Users can submit reports"
 alter table profiles add column if not exists timezone text not null default 'UTC';
 
 create index idx_profiles_timezone on profiles(timezone);
+
+-- ========== 010_remove_gamification.sql ==========
+
+drop table if exists missed_reactions cascade;
+drop table if exists missed_events cascade;
+drop table if exists points_log cascade;
+
+alter table group_members drop column if exists points;
+alter table group_members drop column if exists current_streak;
+
+alter table goals drop column if exists points_value;
+
+alter table groups drop column if exists weekly_reset_enabled;

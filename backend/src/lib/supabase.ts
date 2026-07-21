@@ -33,7 +33,6 @@ export type Group = {
   invite_code: string;
   owner_id: string;
   approval_threshold: number;
-  weekly_reset_enabled: boolean;
   created_at: string;
 };
 
@@ -42,8 +41,6 @@ export type GroupMember = {
   group_id: string;
   user_id: string;
   role: string;
-  points: number;
-  current_streak: number;
   joined_at: string;
   profiles?: Profile;
 };
@@ -56,7 +53,6 @@ export type Goal = {
   description: string | null;
   type: 'group' | 'individual';
   frequency: 'daily' | 'weekly' | 'one_time';
-  points_value: number;
   due_date: string | null;
   is_active: boolean;
   created_at: string;

@@ -16,7 +16,6 @@ export function GroupSettingsPage() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [approvalThreshold, setApprovalThreshold] = useState(2);
-  const [weeklyReset, setWeeklyReset] = useState(false);
   const [isDiscoverable, setIsDiscoverable] = useState(false);
   const [category, setCategory] = useState('');
   const [timezone, setTimezone] = useState('UTC');
@@ -32,7 +31,6 @@ export function GroupSettingsPage() {
       setName(group.name);
       setDescription(group.description ?? '');
       setApprovalThreshold(group.approval_threshold);
-      setWeeklyReset(group.weekly_reset_enabled);
       setIsDiscoverable(group.is_discoverable ?? false);
       setCategory(group.category ?? '');
     }
@@ -63,7 +61,6 @@ export function GroupSettingsPage() {
           name,
           description,
           approval_threshold: approvalThreshold,
-          weekly_reset_enabled: weeklyReset,
           is_discoverable: isDiscoverable,
           category: category || null,
         }),
@@ -196,10 +193,6 @@ export function GroupSettingsPage() {
               className="mt-3 w-full accent-accent"
             />
           </div>
-          <label className="flex items-center gap-3 text-sm text-ink">
-            <input type="checkbox" checked={weeklyReset} onChange={(e) => setWeeklyReset(e.target.checked)} className="accent-accent" />
-            Reset standings every week
-          </label>
           <label className="flex items-center gap-3 text-sm text-ink">
             <input type="checkbox" checked={isDiscoverable} onChange={(e) => setIsDiscoverable(e.target.checked)} className="accent-accent" />
             List in crew discovery
