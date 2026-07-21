@@ -27,7 +27,7 @@ const navItems = [
   { to: 'submit', label: 'Send proof', icon: <IconProof /> },
   { to: 'approve', label: 'Vouch', icon: <IconVouch /> },
   { to: 'leaderboard', label: 'Standings', icon: <IconStandings /> },
-  { to: 'settings', label: 'Settings', icon: <IconSettings />, ownerOnly: true },
+  { to: 'settings', label: 'Settings', icon: <IconSettings /> },
 ];
 
 export function GroupLayout() {
@@ -67,9 +67,7 @@ export function GroupLayout() {
     );
   }
 
-  const links = navItems.filter(
-    (item) => !item.ownerOnly || group.my_role === 'owner'
-  );
+  const links = navItems;
 
   const level = getLevelInfo(group.my_points ?? 0);
 
