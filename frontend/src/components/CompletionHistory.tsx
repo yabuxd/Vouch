@@ -1,4 +1,7 @@
+import { Link } from 'react-router-dom';
 import type { CompletionHistoryItem } from '../lib/api';
+import { formatDueDate } from '../lib/format';
+import { IconShieldCheck } from './SidebarIcons';
 
 const statusBadge: Record<string, string> = {
   pending: 'badge-submitted',
@@ -14,14 +17,26 @@ const statusLabel: Record<string, string> = {
 
 type Props = {
   items: CompletionHistoryItem[];
+  groupId?: string;
 };
 
-export function CompletionHistory({ items }: Props) {
+export function CompletionHistory({ items, groupId }: Props) {
   if (!items.length) {
     return (
-      <div className="empty-quest">
-        <p className="empty-quest-icon">◎</p>
-        <p className="text-sm text-ink-muted">No submissions yet. Send proof on an active quest to see it here.</p>
+      <div className="history-empty">
+        <IconShieldCheck className="history-empty-icon" />
+        <p className="history-empty-title">No proof submitted yet</p>
+        <p className="history-empty-body">
+          Send proof on your first quest to start your streak.
+          {groupId && (
+            <>
+              {' '}
+              <Link to={`/groups/${groupId}/tasks`} className="link">
+                Pick a quest
+              </Link>
+            </>
+          )}
+        </p>
       </div>
     );
   }
@@ -38,16 +53,25 @@ export function CompletionHistory({ items }: Props) {
               </span>
             </div>
             <p className="mt-1 font-mono text-xs text-ink-muted">
-              Due {item.due_date} · Submitted {new Date(item.submitted_at).toLocaleDateString()}
+              {formatDueDate(item.due_date)} · Submitted{' '}
+              {new Date(item.submitted_at).toLocaleDateString(undefined, {
+                month: 'short',
+                day: 'numeric',
+              })}
             </p>
             {item.note && <p className="mt-2 text-sm text-ink-muted">{item.note}</p>}
           </div>
           {item.screenshot_signed_url && (
-            <a href={item.screenshot_signed_url} target="_blank" rel="noopener noreferrer" className="shrink-0">
+            <a
+              href={item.screenshot_signed_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0"
+            >
               <img
                 src={item.screenshot_signed_url}
                 alt="Submitted proof"
-                className="h-20 w-20 rounded-lg object-cover border border-border"
+                className="h-20 w-20 rounded-lg object-cover border border-rule"
               />
             </a>
           )}

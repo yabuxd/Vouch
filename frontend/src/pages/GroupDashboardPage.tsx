@@ -47,26 +47,29 @@ export function GroupDashboardPage() {
   }
 
   return (
-    <div className="space-y-12">
+    <div className="dashboard-overview">
       {(dashboard?.pending_approvals_count ?? 0) > 0 && (
         <Link to={`/groups/${id}/approve`} className="quest-alert block">
           <span className="quest-alert-icon">⚡</span>
           <span>
-            <strong>{dashboard?.pending_approvals_count} proof{dashboard?.pending_approvals_count === 1 ? '' : 's'}</strong>
-            {' '}waiting for your vouch →
+            <strong>
+              {dashboard?.pending_approvals_count} proof
+              {dashboard?.pending_approvals_count === 1 ? '' : 's'}
+            </strong>{' '}
+            waiting for your vouch →
           </span>
         </Link>
       )}
 
       {group && <InviteCodeBanner group={group} />}
 
-      <section>
+      <section className="dashboard-section">
         <div className="section-header">
           <div>
-            <p className="label-caps">Active quests</p>
+            <p className="label-caps section-eyebrow">Active quests</p>
             <p className="section-sub">Assignments due now — send proof when you&apos;re done.</p>
           </div>
-          <Link to={`/groups/${id}/tasks`} className="btn btn-ghost">
+          <Link to={`/groups/${id}/tasks`} className="btn btn-outline-sm">
             All tasks
           </Link>
         </div>
@@ -82,29 +85,32 @@ export function GroupDashboardPage() {
             <p className="empty-quest-icon">◎</p>
             <p className="text-sm text-ink-muted">
               No active quests.{' '}
-              <Link to={`/groups/${id}/tasks`} className="link">Pick up a task</Link> to get started.
+              <Link to={`/groups/${id}/tasks`} className="link">
+                Pick up a task
+              </Link>{' '}
+              to get started.
             </p>
           </div>
         )}
       </section>
 
-      <section>
-        <div className="section-header">
+      <section className="dashboard-section">
+        <div className="section-header section-header-flush">
           <div>
-            <p className="label-caps">Completion history</p>
+            <p className="label-caps section-eyebrow">Completion history</p>
             <p className="section-sub">Your submitted proof and current status.</p>
           </div>
         </div>
-        <CompletionHistory items={dashboard?.completion_history ?? []} />
+        <CompletionHistory items={dashboard?.completion_history ?? []} groupId={id} />
       </section>
 
-      <section>
+      <section className="dashboard-section">
         <div className="section-header">
           <div>
-            <p className="label-caps">Missed quests</p>
+            <p className="label-caps section-eyebrow">Missed quests</p>
             <p className="section-sub">Crew misses happen — react and rally.</p>
           </div>
-          <button type="button" onClick={loadMissed} className="btn btn-ghost">
+          <button type="button" onClick={loadMissed} className="btn btn-outline-sm">
             Refresh
           </button>
         </div>

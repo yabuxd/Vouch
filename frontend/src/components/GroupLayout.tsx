@@ -84,7 +84,7 @@ export function GroupLayout() {
           {group.description && (
             <p className="mt-2 text-sm text-ink-muted">{group.description}</p>
           )}
-          <p className="label-caps mt-4">Navigation</p>
+          <p className="label-caps section-eyebrow mt-4">Navigation</p>
         </>
       }
       nav={
