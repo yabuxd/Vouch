@@ -50,7 +50,6 @@ export async function getMissedFeed(
       member_id: event.member_id,
       goal_id: event.goal_id,
       goal_assignment_id: event.goal_assignment_id,
-      streak_before: event.streak_before,
       created_at: event.created_at,
       member: profiles,
       goal: goals,

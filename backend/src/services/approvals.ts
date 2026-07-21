@@ -8,7 +8,7 @@ export async function processVote(
 ) {
   const { data: submission, error: subErr } = await supabase
     .from('submissions')
-    .select('*, goal_assignments(goal_id, goals(group_id, points_value, frequency))')
+    .select('*, goal_assignments(goal_id, goals(group_id))')
     .eq('id', submissionId)
     .single();
 
@@ -35,8 +35,7 @@ export async function processVote(
   if (voteErr) throw new Error(voteErr.message);
 
   const ga = submission.goal_assignments as unknown as {
-    goal_id: string;
-    goals: { group_id: string; points_value: number; frequency: string };
+    goals: { group_id: string };
   };
   const groupId = ga.goals.group_id;
 
@@ -48,63 +47,29 @@ export async function processVote(
 
   const threshold = group?.approval_threshold ?? 2;
 
-  const { data: votes } = await supabase
-    .from('approvals')
-    .select('decision')
-    .eq('submission_id', submissionId);
-
-  const approvals = (votes ?? []).filter((v) => v.decision === 'approve').length;
-  const rejections = (votes ?? []).filter((v) => v.decision === 'reject').length;
-
-  if (approvals >= threshold) {
-    const result = await finalizeApproval(submission, groupId, ga.goals.points_value, ga.goals.frequency);
-    return { approvals, rejections, threshold, resolved: true, approved: true, ...result };
-  } else if (rejections >= threshold) {
-    await supabase.from('submissions').update({ status: 'rejected' }).eq('id', submissionId);
-    await supabase
-      .from('goal_assignments')
-      .update({ status: 'rejected' })
-      .eq('id', submission.goal_assignment_id);
-    return { approvals, rejections, threshold, resolved: true, approved: false };
-  }
-
-  return { approvals, rejections, threshold, resolved: false };
-}
-
-async function finalizeApproval(
-  submission: { id: string; user_id: string; goal_assignment_id: string },
-  groupId: string,
-  pointsValue: number,
-  frequency: string
-) {
-  await supabase.from('submissions').update({ status: 'approved' }).eq('id', submission.id);
-  await supabase
-    .from('goal_assignments')
-    .update({ status: 'approved' })
-    .eq('id', submission.goal_assignment_id);
-
-  const { data: member } = await supabase
-    .from('group_members')
-    .select('points, current_streak')
-    .eq('group_id', groupId)
-    .eq('user_id', submission.user_id)
-    .single();
-
-  const newPoints = (member?.points ?? 0) + pointsValue;
-  const newStreak = frequency === 'daily' ? (member?.current_streak ?? 0) + 1 : (member?.current_streak ?? 0);
-
-  await supabase
-    .from('group_members')
-    .update({ points: newPoints, current_streak: newStreak })
-    .eq('group_id', groupId)
-    .eq('user_id', submission.user_id);
-
-  await supabase.from('points_log').insert({
-    user_id: submission.user_id,
-    group_id: groupId,
-    submission_id: submission.id,
-    points: pointsValue,
+  const { data: result, error: resolveErr } = await supabase.rpc('resolve_submission_if_quorum', {
+    p_submission_id: submissionId,
+    p_threshold: threshold,
   });
 
-  return { points_awarded: pointsValue, new_points: newPoints, new_streak: newStreak };
+  if (resolveErr) throw new Error(resolveErr.message);
+
+  const resolved = result as {
+    resolved: boolean;
+    approved?: boolean;
+    failed?: boolean;
+    already_resolved?: boolean;
+    approvals: number;
+    rejections: number;
+    threshold: number;
+  };
+
+  return {
+    approvals: resolved.approvals,
+    rejections: resolved.rejections,
+    threshold: resolved.threshold ?? threshold,
+    resolved: resolved.resolved,
+    approved: resolved.approved,
+    failed: resolved.failed,
+  };
 }

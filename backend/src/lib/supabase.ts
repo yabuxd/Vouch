@@ -33,7 +33,7 @@ export type Group = {
   invite_code: string;
   owner_id: string;
   approval_threshold: number;
-  weekly_reset_enabled: boolean;
+  auto_approve_hours: number;
   created_at: string;
 };
 
@@ -42,8 +42,6 @@ export type GroupMember = {
   group_id: string;
   user_id: string;
   role: string;
-  points: number;
-  current_streak: number;
   joined_at: string;
   profiles?: Profile;
 };
@@ -56,7 +54,6 @@ export type Goal = {
   description: string | null;
   type: 'group' | 'individual';
   frequency: 'daily' | 'weekly' | 'one_time';
-  points_value: number;
   due_date: string | null;
   is_active: boolean;
   created_at: string;
@@ -67,7 +64,8 @@ export type GoalAssignment = {
   goal_id: string;
   user_id: string;
   due_date: string;
-  status: 'pending' | 'submitted' | 'approved' | 'rejected';
+  status: 'pending' | 'submitted' | 'approved' | 'rejected' | 'failed';
+  submit_count: number;
   goals?: Goal;
 };
 
@@ -79,6 +77,8 @@ export type Submission = {
   note: string | null;
   submitted_at: string;
   status: 'pending' | 'approved' | 'rejected';
+  capture_date_flag: boolean;
+  capture_date_note: string | null;
   profiles?: Profile;
   goal_assignments?: GoalAssignment;
 };

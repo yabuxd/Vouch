@@ -99,7 +99,7 @@ export async function generateDailyAssignments(): Promise<number> {
   return created;
 }
 
-export async function resetMissedStreaks(): Promise<number> {
+export async function createMissedEvents(): Promise<number> {
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
   const yesterdayStr = yesterday.toISOString().split('T')[0];
@@ -123,31 +123,21 @@ export async function resetMissedStreaks(): Promise<number> {
 
     if (!goal.is_active || !['daily', 'weekly'].includes(goal.frequency)) continue;
 
-    const { data: membership } = await supabase
-      .from('group_members')
-      .select('current_streak')
-      .eq('user_id', assignment.user_id)
-      .eq('group_id', goal.group_id)
-      .single();
-
-    const streakBefore = membership?.current_streak ?? 0;
-
     const { error: insertError } = await supabase.from('missed_events').insert({
       group_id: goal.group_id,
       member_id: assignment.user_id,
       goal_id: assignment.goal_id,
       goal_assignment_id: assignment.id,
-      streak_before: streakBefore,
     });
 
     if (!insertError) eventsCreated++;
-
-    await supabase
-      .from('group_members')
-      .update({ current_streak: 0 })
-      .eq('user_id', assignment.user_id)
-      .eq('group_id', goal.group_id);
   }
 
   return eventsCreated;
+}
+
+export async function autoApproveStaleSubmissions(): Promise<number> {
+  const { data, error } = await supabase.rpc('auto_approve_stale_submissions');
+  if (error) throw new Error(error.message);
+  return (data as number) ?? 0;
 }
