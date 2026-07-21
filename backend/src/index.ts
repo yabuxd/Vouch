@@ -7,7 +7,7 @@ import goalsRouter from './routes/goals.js';
 import assignmentsRouter from './routes/assignments.js';
 import submissionsRouter from './routes/submissions.js';
 import approvalsRouter from './routes/approvals.js';
-import leaderboardRouter from './routes/leaderboard.js';
+import dashboardRouter from './routes/dashboard.js';
 import internalRouter from './routes/internal.js';
 import { missedFeedRouter, missedEventRouter } from './routes/missed-events.js';
 
@@ -27,7 +27,7 @@ app.use('/api/v1/internal', internalRouter);
 
 app.use('/api/v1/groups', requireAuth, groupsRouter);
 app.use('/api/v1/groups/:id/goals', requireAuth, goalsRouter);
-app.use('/api/v1/groups/:id', requireAuth, leaderboardRouter);
+app.use('/api/v1/groups/:id', requireAuth, dashboardRouter);
 app.use('/api/v1/groups/:id', requireAuth, missedFeedRouter);
 app.use('/api/v1/missed-events', requireAuth, missedEventRouter);
 app.use('/api/v1/goals', requireAuth, assignmentsRouter);
