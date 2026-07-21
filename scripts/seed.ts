@@ -104,7 +104,6 @@ async function main() {
         description: 'Complete at least 1 hour of focused study',
         type: 'group',
         frequency: 'daily',
-        points_value: 10,
       })
       .select()
       .single();
@@ -127,7 +126,6 @@ async function main() {
         title: 'Read 20 pages',
         type: 'individual',
         frequency: 'weekly',
-        points_value: 15,
       })
       .select()
       .single();
