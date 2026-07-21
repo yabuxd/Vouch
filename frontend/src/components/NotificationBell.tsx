@@ -35,6 +35,12 @@ function formatNotification(n: NotificationItem): { title: string; body: string;
         body: `"${p.goal_title as string}" in ${p.group_name as string}`,
         href: p.group_id ? `/groups/${p.group_id}` : undefined,
       };
+    case 'crew_suggestion':
+      return {
+        title: 'Find a crew',
+        body: (p.message as string) ?? 'Discover crews that match your quests',
+        href: '/dashboard/discover',
+      };
     default:
       return { title: 'Notification', body: '' };
   }

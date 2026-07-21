@@ -4,11 +4,13 @@ import { api, type Group } from '../lib/api';
 import { toUserErrorMessage } from '../lib/errors';
 import { useAuth } from '../hooks/useAuth';
 import { SidebarShell } from '../components/SidebarShell';
-import { SidebarButton } from '../components/SidebarLink';
+import { SidebarLink, SidebarButton } from '../components/SidebarLink';
 import { IconAddCrew, IconInvite, IconSignOut } from '../components/SidebarIcons';
 import { CrewListSkeleton } from '../components/skeletons/PageSkeletons';
 import { ErrorState } from '../components/ErrorState';
 import { NotificationBell } from '../components/NotificationBell';
+import { InsightsPanel } from '../components/InsightsPanel';
+import { useTimezoneSync } from '../hooks/useTimezoneSync';
 import { getLevelInfo } from '../lib/gamification';
 import { LevelBadge } from '../components/gamification/LevelBadge';
 import { StreakFlame } from '../components/gamification/StreakFlame';
@@ -16,6 +18,7 @@ import { XpBar } from '../components/gamification/XpBar';
 
 export function DashboardPage() {
   const { signOut } = useAuth();
+  useTimezoneSync();
   const navigate = useNavigate();
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
@@ -113,6 +116,9 @@ export function DashboardPage() {
           <SidebarButton icon={<IconInvite />} onClick={() => { setShowJoin(true); setShowCreate(false); }}>
             Enter invite code
           </SidebarButton>
+          <SidebarLink to="/dashboard/discover" icon={<IconInvite />}>
+            Discover crews
+          </SidebarLink>
         </>
       }
       footer={
@@ -193,6 +199,10 @@ export function DashboardPage() {
           })}
         </ul>
       )}
+
+      <div className="mt-16">
+        <InsightsPanel />
+      </div>
     </SidebarShell>
   );
 }

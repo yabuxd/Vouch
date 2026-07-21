@@ -67,12 +67,14 @@ router.patch('/preferences', async (req: AuthRequest, res) => {
       vouch_needed,
       quest_missed,
       submission_resolved,
+      crew_suggestion,
     } = req.body;
     const updates: Record<string, boolean> = {};
     if (deadline_approaching !== undefined) updates.deadline_approaching = deadline_approaching;
     if (vouch_needed !== undefined) updates.vouch_needed = vouch_needed;
     if (quest_missed !== undefined) updates.quest_missed = quest_missed;
     if (submission_resolved !== undefined) updates.submission_resolved = submission_resolved;
+    if (crew_suggestion !== undefined) updates.crew_suggestion = crew_suggestion;
 
     const prefs = await updatePreferences(req.userId!, updates);
     res.json(prefs);

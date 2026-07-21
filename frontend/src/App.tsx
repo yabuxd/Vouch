@@ -18,6 +18,7 @@ import { ApprovalQueuePage } from './pages/ApprovalQueuePage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { LandingPage } from './pages/LandingPage';
 import { JoinPage } from './pages/JoinPage';
+import { DiscoverCrewsPage } from './pages/DiscoverCrewsPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 
 /** Forward Supabase hash errors (e.g. otp_expired on Site URL /) to the callback page. */
@@ -53,6 +54,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/dashboard/discover"
+              element={
+                <ProtectedRoute>
+                  <DiscoverCrewsPage />
                 </ProtectedRoute>
               }
             />

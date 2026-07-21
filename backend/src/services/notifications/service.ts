@@ -10,6 +10,7 @@ type Preferences = {
   vouch_needed: boolean;
   quest_missed: boolean;
   submission_resolved: boolean;
+  crew_suggestion: boolean;
 };
 
 const PREF_KEY: Record<NotificationType, keyof Preferences> = {
@@ -17,6 +18,7 @@ const PREF_KEY: Record<NotificationType, keyof Preferences> = {
   vouch_needed: 'vouch_needed',
   quest_missed: 'quest_missed',
   submission_resolved: 'submission_resolved',
+  crew_suggestion: 'crew_suggestion',
 };
 
 export async function ensurePreferences(userId: string): Promise<Preferences> {
@@ -34,6 +36,7 @@ export async function ensurePreferences(userId: string): Promise<Preferences> {
     vouch_needed: true,
     quest_missed: true,
     submission_resolved: true,
+    crew_suggestion: true,
   };
 
   const { data, error } = await supabase

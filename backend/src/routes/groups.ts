@@ -153,12 +153,14 @@ router.patch('/:id', async (req: AuthRequest, res) => {
       return;
     }
 
-    const { name, description, approval_threshold, weekly_reset_enabled } = req.body;
+    const { name, description, approval_threshold, weekly_reset_enabled, is_discoverable, category } = req.body;
     const updates: Record<string, unknown> = {};
     if (name !== undefined) updates.name = name;
     if (description !== undefined) updates.description = description;
     if (approval_threshold !== undefined) updates.approval_threshold = approval_threshold;
     if (weekly_reset_enabled !== undefined) updates.weekly_reset_enabled = weekly_reset_enabled;
+    if (is_discoverable !== undefined) updates.is_discoverable = is_discoverable;
+    if (category !== undefined) updates.category = category;
 
     const { data, error } = await supabase
       .from('groups')

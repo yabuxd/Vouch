@@ -4,7 +4,8 @@ export type NotificationType =
   | 'deadline_approaching'
   | 'vouch_needed'
   | 'quest_missed'
-  | 'submission_resolved';
+  | 'submission_resolved'
+  | 'crew_suggestion';
 
 export type NotificationPayload = Record<string, unknown>;
 

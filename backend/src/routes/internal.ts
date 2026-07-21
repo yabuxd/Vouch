@@ -5,6 +5,7 @@ import {
   generateDeadlineApproachingNotifications,
   generateVouchNeededNotifications,
 } from '../services/notifications/generators.js';
+import { runColdStartMatching } from '../services/cold-start.js';
 
 const router = Router();
 
@@ -12,7 +13,8 @@ router.post('/generate-daily-assignments', requireCronSecret, async (_req, res) 
   try {
     const missedEvents = await resetMissedStreaks();
     const created = await generateDailyAssignments();
-    res.json({ created, missed_events: missedEvents });
+    const cold_start = await runColdStartMatching();
+    res.json({ created, missed_events: missedEvents, cold_start });
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }
