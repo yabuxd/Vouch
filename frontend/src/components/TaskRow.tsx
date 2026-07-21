@@ -1,19 +1,20 @@
 import { Link, useParams } from 'react-router-dom';
 import type { Goal, GoalAssignment } from '../lib/api';
-import { PointsReward } from './gamification/PointsReward';
 
 const statusBadge: Record<string, string> = {
   pending: 'badge-pending',
   submitted: 'badge-submitted',
   approved: 'badge-approved',
   rejected: 'badge-rejected',
+  failed: 'badge-rejected',
 };
 
 const statusLabel: Record<string, string> = {
   pending: 'Ready',
   submitted: 'Awaiting vouch',
   approved: 'Cleared',
-  rejected: 'Bounced',
+  rejected: 'Rejected — resubmit once',
+  failed: 'Failed',
 };
 
 type Props = { goal: Goal; assignment?: GoalAssignment };
@@ -32,7 +33,6 @@ export function TaskRow({ goal, assignment }: Props) {
               {goal.type === 'group' ? 'Crew' : 'Solo'}
             </span>
           </div>
-          <PointsReward points={goal.points_value} size="sm" pulse={!!isActionable} />
         </div>
         {goal.description && <p className="mt-1 text-sm text-ink-muted">{goal.description}</p>}
         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-ink-muted">
