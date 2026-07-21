@@ -158,7 +158,7 @@ Set `ADMIN_ALERT_EMAIL` on the backend (Render env vars). New content reports lo
 
 ### Database migrations (005–009)
 
-From Supabase Dashboard → SQL Editor, run each file in `supabase/migrations/` in order, **or** use the apply script:
+From Supabase Dashboard → SQL Editor, run `supabase/APPLY_005_009.sql`, **or** use the apply script:
 
 ```bash
 cd backend
