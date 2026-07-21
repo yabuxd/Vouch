@@ -84,6 +84,38 @@ export function IconInvite({ className }: IconProps) {
   );
 }
 
+export function IconCopy({ className }: IconProps) {
+  return (
+    <svg className={cn(className)} viewBox="0 0 20 20" fill="none" aria-hidden>
+      <rect x="6.5" y="6.5" width="9" height="9" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M5 13.5V5.5a1.5 1.5 0 0 1 1.5-1.5H13.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function IconClock({ className }: IconProps) {
+  return (
+    <svg className={cn(className)} viewBox="0 0 20 20" fill="none" aria-hidden>
+      <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M10 6.5V10l2.5 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function IconShieldCheck({ className }: IconProps) {
+  return (
+    <svg className={cn(className)} viewBox="0 0 20 20" fill="none" aria-hidden>
+      <path
+        d="M10 2.5L4.5 4.75v4.75c0 3.25 2.35 6.3 5.5 7.25 3.15-.95 5.5-4 5.5-7.25V4.75L10 2.5z"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+      />
+      <path d="M7.5 10l1.75 1.75L12.5 8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function IconSignOut({ className }: IconProps) {
   return (
     <svg className={cn(className)} viewBox="0 0 20 20" fill="none" aria-hidden>
