@@ -1,17 +1,37 @@
 import { supabase } from '../lib/supabase.js';
 import type { Goal } from '../lib/supabase.js';
+import { endOfWeekLocal, todayLocal, yesterdayLocal } from '../lib/timezone.js';
 import { notifyCrewOfMissedQuests } from './notifications/generators.js';
 
-function endOfWeek(date: Date): string {
-  const d = new Date(date);
-  const day = d.getDay();
-  const diff = day === 0 ? 0 : 7 - day;
-  d.setDate(d.getDate() + diff);
-  return d.toISOString().split('T')[0];
+async function getUserTimezones(userIds: string[]): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  if (!userIds.length) return map;
+
+  const { data } = await supabase
+    .from('profiles')
+    .select('id, timezone')
+    .in('id', userIds);
+
+  for (const p of data ?? []) {
+    map.set(p.id, p.timezone ?? 'UTC');
+  }
+  for (const id of userIds) {
+    if (!map.has(id)) map.set(id, 'UTC');
+  }
+  return map;
 }
 
-function today(): string {
-  return new Date().toISOString().split('T')[0];
+function dueDateForUser(goal: Goal, timezone: string): string {
+  switch (goal.frequency) {
+    case 'daily':
+      return todayLocal(timezone);
+    case 'weekly':
+      return endOfWeekLocal(timezone);
+    case 'one_time':
+      return goal.due_date ?? todayLocal(timezone);
+    default:
+      return todayLocal(timezone);
+  }
 }
 
 export async function getGoalUserIds(goal: Goal): Promise<string[]> {
@@ -27,26 +47,13 @@ export async function getGoalUserIds(goal: Goal): Promise<string[]> {
 
 export async function generateAssignmentsForGoal(goal: Goal): Promise<void> {
   const userIds = await getGoalUserIds(goal);
-  let dueDate: string;
+  if (!userIds.length) return;
 
-  switch (goal.frequency) {
-    case 'daily':
-      dueDate = today();
-      break;
-    case 'weekly':
-      dueDate = endOfWeek(new Date());
-      break;
-    case 'one_time':
-      dueDate = goal.due_date ?? today();
-      break;
-    default:
-      return;
-  }
-
+  const timezones = await getUserTimezones(userIds);
   const rows = userIds.map((userId) => ({
     goal_id: goal.id,
     user_id: userId,
-    due_date: dueDate,
+    due_date: dueDateForUser(goal, timezones.get(userId) ?? 'UTC'),
     status: 'pending' as const,
   }));
 
@@ -64,19 +71,15 @@ export async function generateDailyAssignments(): Promise<number> {
   if (!goals?.length) return 0;
 
   let created = 0;
-  const todayStr = today();
 
   for (const goal of goals) {
     const userIds = await getGoalUserIds(goal as Goal);
-    let dueDate: string;
-
-    if (goal.frequency === 'daily') {
-      dueDate = todayStr;
-    } else {
-      dueDate = endOfWeek(new Date());
-    }
+    const timezones = await getUserTimezones(userIds);
 
     for (const userId of userIds) {
+      const tz = timezones.get(userId) ?? 'UTC';
+      const dueDate = dueDateForUser(goal as Goal, tz);
+
       const { data: existing } = await supabase
         .from('goal_assignments')
         .select('id')
@@ -101,17 +104,24 @@ export async function generateDailyAssignments(): Promise<number> {
 }
 
 export async function resetMissedStreaks(): Promise<number> {
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split('T')[0];
-
-  const { data: missed } = await supabase
+  const { data: candidates } = await supabase
     .from('goal_assignments')
-    .select('id, user_id, goal_id, goals!inner(group_id, frequency, is_active)')
-    .eq('due_date', yesterdayStr)
+    .select('id, user_id, goal_id, due_date, goals!inner(group_id, frequency, is_active)')
     .neq('status', 'approved');
 
-  if (!missed?.length) return 0;
+  if (!candidates?.length) return 0;
+
+  const userIds = [...new Set(candidates.map((a) => a.user_id))];
+  const timezones = await getUserTimezones(userIds);
+
+  const missed = candidates.filter((assignment) => {
+    const goal = assignment.goals as unknown as { frequency: string; is_active: boolean };
+    if (!goal.is_active || !['daily', 'weekly'].includes(goal.frequency)) return false;
+    const tz = timezones.get(assignment.user_id) ?? 'UTC';
+    return assignment.due_date === yesterdayLocal(tz);
+  });
+
+  if (!missed.length) return 0;
 
   let eventsCreated = 0;
   const missesByGroup = new Map<
@@ -127,8 +137,6 @@ export async function resetMissedStreaks(): Promise<number> {
       title?: string;
       groups?: { name: string };
     };
-
-    if (!goal.is_active || !['daily', 'weekly'].includes(goal.frequency)) continue;
 
     const { data: membership } = await supabase
       .from('group_members')
