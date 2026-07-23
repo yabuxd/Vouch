@@ -1,6 +1,6 @@
 # Vouch — Group Accountability App
 
-Beat procrastination through peer accountability. Members submit proof of task completion; group members vouch before points count.
+Beat procrastination through peer accountability. Members submit proof of task completion; the crew vouches before a quest counts as done.
 
 ## Stack
 

@@ -143,14 +143,6 @@ export type SubmissionComment = {
 export type ReportTargetType = 'submission' | 'comment' | 'user';
 export type ReportReason = 'inappropriate' | 'spam' | 'harassment' | 'other';
 
-export type UserProfile = {
-  id: string;
-  name: string;
-  avatar_url: string | null;
-  timezone: string;
-  created_at?: string;
-};
-
 export type UserInsights = {
   completion_rate_30d: number;
   completion_rate_90d: number;
@@ -230,12 +222,4 @@ export type NotificationItem = {
   payload: Record<string, unknown>;
   read_at: string | null;
   created_at: string;
-};
-
-export type NotificationPreferences = {
-  deadline_approaching: boolean;
-  vouch_needed: boolean;
-  quest_missed: boolean;
-  submission_resolved: boolean;
-  crew_suggestion: boolean;
 };
