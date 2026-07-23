@@ -22,14 +22,6 @@ const PREF_KEY: Record<NotificationType, keyof Preferences> = {
 };
 
 export async function ensurePreferences(userId: string): Promise<Preferences> {
-  const { data: existing } = await supabase
-    .from('notification_preferences')
-    .select('*')
-    .eq('user_id', userId)
-    .maybeSingle();
-
-  if (existing) return existing as Preferences;
-
   const defaults = {
     user_id: userId,
     deadline_approaching: true,
@@ -37,16 +29,28 @@ export async function ensurePreferences(userId: string): Promise<Preferences> {
     quest_missed: true,
     submission_resolved: true,
     crew_suggestion: true,
-  };
+  } as Preferences;
 
-  const { data, error } = await supabase
-    .from('notification_preferences')
-    .insert(defaults)
-    .select()
-    .single();
+  try {
+    const { data: existing } = await supabase
+      .from('notification_preferences')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle();
 
-  if (error) throw new Error(error.message);
-  return data as Preferences;
+    if (existing) return existing as Preferences;
+
+    const { data, error } = await supabase
+      .from('notification_preferences')
+      .insert(defaults)
+      .select()
+      .single();
+
+    if (error) return defaults;
+    return data as Preferences;
+  } catch {
+    return defaults;
+  }
 }
 
 export async function notifyUser(
@@ -54,69 +58,89 @@ export async function notifyUser(
   type: NotificationType,
   payload: NotificationPayload
 ): Promise<boolean> {
-  const prefs = await ensurePreferences(userId);
-  if (!prefs[PREF_KEY[type]]) return false;
+  try {
+    const prefs = await ensurePreferences(userId);
+    if (!prefs[PREF_KEY[type]]) return false;
 
-  for (const delivery of getDeliveries()) {
-    await delivery.deliver(userId, type, payload);
+    for (const delivery of getDeliveries()) {
+      await delivery.deliver(userId, type, payload);
+    }
+    return true;
+  } catch {
+    return false;
   }
-  return true;
 }
 
 export async function listNotifications(userId: string, limit = 30, offset = 0) {
-  const { data, error } = await supabase
-    .from('notifications')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1);
+  try {
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
-  if (error) throw new Error(error.message);
-  return data ?? [];
+    if (error) return [];
+    return data ?? [];
+  } catch {
+    return [];
+  }
 }
 
 export async function getUnreadCount(userId: string): Promise<number> {
-  const { count, error } = await supabase
-    .from('notifications')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', userId)
-    .is('read_at', null);
+  try {
+    const { count, error } = await supabase
+      .from('notifications')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .is('read_at', null);
 
-  if (error) throw new Error(error.message);
-  return count ?? 0;
+    if (error) return 0;
+    return count ?? 0;
+  } catch {
+    return 0;
+  }
 }
 
 export async function markRead(userId: string, notificationId: string) {
-  const { error } = await supabase
-    .from('notifications')
-    .update({ read_at: new Date().toISOString() })
-    .eq('id', notificationId)
-    .eq('user_id', userId);
-
-  if (error) throw new Error(error.message);
+  try {
+    await supabase
+      .from('notifications')
+      .update({ read_at: new Date().toISOString() })
+      .eq('id', notificationId)
+      .eq('user_id', userId);
+  } catch {
+    /* non-fatal */
+  }
 }
 
 export async function markAllRead(userId: string) {
-  const { error } = await supabase
-    .from('notifications')
-    .update({ read_at: new Date().toISOString() })
-    .eq('user_id', userId)
-    .is('read_at', null);
-
-  if (error) throw new Error(error.message);
+  try {
+    await supabase
+      .from('notifications')
+      .update({ read_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .is('read_at', null);
+  } catch {
+    /* non-fatal */
+  }
 }
 
 export async function updatePreferences(userId: string, updates: Partial<Preferences>) {
-  await ensurePreferences(userId);
-  const { data, error } = await supabase
-    .from('notification_preferences')
-    .update({ ...updates, updated_at: new Date().toISOString() })
-    .eq('user_id', userId)
-    .select()
-    .single();
+  const defaults = await ensurePreferences(userId);
+  try {
+    const { data, error } = await supabase
+      .from('notification_preferences')
+      .update({ ...updates, updated_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .select()
+      .single();
 
-  if (error) throw new Error(error.message);
-  return data;
+    if (error) return defaults;
+    return data;
+  } catch {
+    return defaults;
+  }
 }
 
 export async function wasNotifiedRecently(
