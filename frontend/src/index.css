@@ -418,6 +418,7 @@ body {
 .mobile-topbar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 1rem;
   padding: 0.875rem 1.25rem;
   background: var(--color-raised);
@@ -425,6 +426,13 @@ body {
   position: sticky;
   top: 0;
   z-index: 30;
+}
+
+.mobile-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  min-width: 0;
 }
 
 .mobile-topbar-title {
