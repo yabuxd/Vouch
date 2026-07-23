@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
+import { NotificationBell } from './NotificationBell';
 
 type SidebarContextValue = {
   collapsed: boolean;
@@ -69,16 +70,21 @@ export function SidebarShell({ title, brand, header, nav, footer, children }: Si
         >
           <div className="sidebar-top">
             {collapsed ? (
-              <button
-                type="button"
-                className="sidebar-expand-hit"
-                onClick={toggleCollapsed}
-                aria-label="Expand sidebar"
-                title="Expand sidebar"
-              >
-                <span className="sidebar-brand-short">V</span>
-                <span className="sidebar-chevron sidebar-chevron-flip" />
-              </button>
+              <div className="sidebar-collapsed-top">
+                <button
+                  type="button"
+                  className="sidebar-expand-hit"
+                  onClick={toggleCollapsed}
+                  aria-label="Expand sidebar"
+                  title="Expand sidebar"
+                >
+                  <span className="sidebar-brand-short">V</span>
+                  <span className="sidebar-chevron sidebar-chevron-flip" />
+                </button>
+                <div className="mt-2 flex justify-center">
+                  <NotificationBell />
+                </div>
+              </div>
             ) : (
               <>
                 <div className="sidebar-brand-row">
@@ -105,18 +111,21 @@ export function SidebarShell({ title, brand, header, nav, footer, children }: Si
 
         <div className="app-main">
           <header className="mobile-topbar">
-            <button
-              type="button"
-              className="hamburger"
-              aria-label="Open menu"
-              aria-expanded={mobileOpen}
-              onClick={() => setMobileOpen(true)}
-            >
-              <span />
-              <span />
-              <span />
-            </button>
-            <h1 className="mobile-topbar-title">{title}</h1>
+            <div className="mobile-topbar-left">
+              <button
+                type="button"
+                className="hamburger"
+                aria-label="Open menu"
+                aria-expanded={mobileOpen}
+                onClick={() => setMobileOpen(true)}
+              >
+                <span />
+                <span />
+                <span />
+              </button>
+              <h1 className="mobile-topbar-title">{title}</h1>
+            </div>
+            <NotificationBell />
           </header>
 
           <main className="app-content">{children}</main>
