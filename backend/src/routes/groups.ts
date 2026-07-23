@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { supabase } from '../lib/supabase.js';
 import { generateInviteCode, isGroupMember, isGroupOwner, reqParam } from '../lib/helpers.js';
 import type { AuthRequest } from '../middleware/auth.js';
+import { joinRateLimit } from '../middleware/rate-limit.js';
 
 const router = Router();
 
@@ -54,7 +55,7 @@ router.post('/', async (req: AuthRequest, res) => {
   }
 });
 
-router.post('/join', async (req: AuthRequest, res) => {
+router.post('/join', joinRateLimit, async (req: AuthRequest, res) => {
   try {
     const { invite_code } = req.body;
     if (!invite_code?.trim()) {

@@ -3,10 +3,11 @@ import { supabase } from '../lib/supabase.js';
 import { getGroupIdFromSubmission, isGroupMember, reqParam } from '../lib/helpers.js';
 import { processVote } from '../services/approvals.js';
 import type { AuthRequest } from '../middleware/auth.js';
+import { voteRateLimit } from '../middleware/rate-limit.js';
 
 const router = Router();
 
-router.post('/:id/vote', async (req: AuthRequest, res) => {
+router.post('/:id/vote', voteRateLimit, async (req: AuthRequest, res) => {
   try {
     const submissionId = reqParam(req.params.id);
     const { decision, comment } = req.body;

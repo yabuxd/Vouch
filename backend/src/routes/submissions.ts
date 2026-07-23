@@ -4,11 +4,12 @@ import { supabase } from '../lib/supabase.js';
 import { getGroupIdFromAssignment, isGroupMember, reqParam } from '../lib/helpers.js';
 import { uploadProof, getSignedUrl } from '../services/storage.js';
 import type { AuthRequest } from '../middleware/auth.js';
+import { uploadRateLimit } from '../middleware/rate-limit.js';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 const router = Router();
 
-router.post('/assignments/:id/submit', upload.single('screenshot'), async (req: AuthRequest, res) => {
+router.post('/assignments/:id/submit', uploadRateLimit, upload.single('screenshot'), async (req: AuthRequest, res) => {
   try {
     const assignmentId = reqParam(req.params.id);
     const { note } = req.body;

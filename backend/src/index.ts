@@ -2,6 +2,12 @@ import express from 'express';
 import dotenv from 'dotenv';
 import { createCorsMiddleware } from './cors-config.js';
 import { requireAuth } from './middleware/auth.js';
+import {
+  apiRateLimit,
+  joinRateLimit,
+  uploadRateLimit,
+  voteRateLimit,
+} from './middleware/rate-limit.js';
 import groupsRouter from './routes/groups.js';
 import goalsRouter from './routes/goals.js';
 import assignmentsRouter from './routes/assignments.js';
@@ -22,6 +28,7 @@ const port = process.env.PORT || 3001;
 
 app.use(createCorsMiddleware());
 app.use(express.json());
+app.use('/api/v1', apiRateLimit);
 
 app.get('/api/v1/health', (_req, res) => {
   res.json({ status: 'ok' });
