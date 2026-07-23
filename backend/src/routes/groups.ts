@@ -158,12 +158,27 @@ router.patch('/:id', async (req: AuthRequest, res) => {
     if (is_discoverable !== undefined) updates.is_discoverable = is_discoverable;
     if (category !== undefined) updates.category = category;
 
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('groups')
       .update(updates)
       .eq('id', groupId)
       .select()
       .single();
+
+    if (error && (error.message.includes('column') || error.message.includes('schema cache'))) {
+      delete updates.is_discoverable;
+      delete updates.category;
+
+      const fallback = await supabase
+        .from('groups')
+        .update(updates)
+        .eq('id', groupId)
+        .select()
+        .single();
+
+      data = fallback.data;
+      error = fallback.error;
+    }
 
     if (error) {
       res.status(400).json({ error: error.message });
