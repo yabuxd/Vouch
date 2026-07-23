@@ -16,17 +16,31 @@ router.get('/discover', async (req: AuthRequest, res) => {
 
     const excludeIds = (myGroups ?? []).map((m) => m.group_id);
 
-    let query = supabase
-      .from('groups')
-      .select('id, name, description, category')
-      .eq('is_discoverable', true);
+    let rawGroups: Array<Record<string, any>> = [];
 
-    if (category) query = query.eq('category', category);
+    try {
+      let query = supabase
+        .from('groups')
+        .select('id, name, description, category, created_at')
+        .eq('is_discoverable', true);
 
-    const { data: groups, error } = await query.order('created_at', { ascending: false });
-    if (error) throw new Error(error.message);
+      if (category) query = query.eq('category', category);
 
-    const filtered = (groups ?? []).filter((g) => !excludeIds.includes(g.id));
+      const { data, error } = await query.order('created_at', { ascending: false });
+      if (!error && data) {
+        rawGroups = data;
+      } else {
+        throw error;
+      }
+    } catch {
+      const { data } = await supabase
+        .from('groups')
+        .select('id, name, description, created_at')
+        .order('created_at', { ascending: false });
+      rawGroups = data ?? [];
+    }
+
+    const filtered = rawGroups.filter((g) => !excludeIds.includes(g.id));
 
     const enriched = await Promise.all(
       filtered.map(async (g) => {
@@ -35,17 +49,23 @@ router.get('/discover', async (req: AuthRequest, res) => {
           .select('id', { count: 'exact', head: true })
           .eq('group_id', g.id);
 
-        const { data: pending } = await supabase
-          .from('crew_join_requests')
-          .select('status')
-          .eq('group_id', g.id)
-          .eq('user_id', req.userId!)
-          .maybeSingle();
+        let pendingStatus: string | null = null;
+        try {
+          const { data: pending } = await supabase
+            .from('crew_join_requests')
+            .select('status')
+            .eq('group_id', g.id)
+            .eq('user_id', req.userId!)
+            .maybeSingle();
+          pendingStatus = pending?.status ?? null;
+        } catch {
+          /* table missing */
+        }
 
         return {
           ...g,
           member_count: count ?? 0,
-          my_join_request: pending?.status ?? null,
+          my_join_request: pendingStatus,
         };
       })
     );
@@ -60,15 +80,19 @@ router.post('/:id/request-join', async (req: AuthRequest, res) => {
   try {
     const groupId = reqParam(req.params.id);
 
-    const { data: group } = await supabase
-      .from('groups')
-      .select('id, is_discoverable')
-      .eq('id', groupId)
-      .single();
+    try {
+      const { data: group } = await supabase
+        .from('groups')
+        .select('id, is_discoverable')
+        .eq('id', groupId)
+        .single();
 
-    if (!group?.is_discoverable) {
-      res.status(400).json({ error: 'This crew is not open for discovery requests' });
-      return;
+      if (group && group.is_discoverable === false) {
+        res.status(400).json({ error: 'This crew is not open for discovery requests' });
+        return;
+      }
+    } catch {
+      /* is_discoverable column missing */
     }
 
     const { data: existingMember } = await supabase
@@ -111,15 +135,19 @@ router.get('/:id/join-requests', async (req: AuthRequest, res) => {
       return;
     }
 
-    const { data, error } = await supabase
-      .from('crew_join_requests')
-      .select('*, profiles(id, name, avatar_url)')
-      .eq('group_id', groupId)
-      .eq('status', 'pending')
-      .order('created_at', { ascending: true });
+    try {
+      const { data, error } = await supabase
+        .from('crew_join_requests')
+        .select('*, profiles(id, name, avatar_url)')
+        .eq('group_id', groupId)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: true });
 
-    if (error) throw new Error(error.message);
-    res.json(data ?? []);
+      if (error) throw error;
+      res.json(data ?? []);
+    } catch {
+      res.json([]);
+    }
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }
