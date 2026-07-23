@@ -18,7 +18,7 @@ router.get('/discover', async (req: AuthRequest, res) => {
 
     let query = supabase
       .from('groups')
-      .select('id, name, description, category, invite_code')
+      .select('id, name, description, category')
       .eq('is_discoverable', true);
 
     if (category) query = query.eq('category', category);
